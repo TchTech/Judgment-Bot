@@ -11,9 +11,9 @@ client.on('ready', () => {
 
 // Create an event listener for messages
 client.on('message', message => {
-  // If the message is "what is my avatar"
-  if (message.content.split(" ")[0] === commands.answer) {
-    // Send the user's avatar URL
+  if (message.content.split(" ")[0] === commands.repeat) {
+    //let user = message.mentions.members.first();
+    //console.log(user)
     let textCommand = message.content.split(" ")
     let deletedElement = textCommand.splice(0, 1)
     message.reply(message.author.username + ": " + textCommand.join(" "));

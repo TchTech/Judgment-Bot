@@ -12,7 +12,7 @@ client.on('ready', () => {
 
 // Create an event listener for messages
 client.on('message', message => {
-  if (message.content.split(" ")[0] === commands.repeat) {
+  if (message.content.split(" ")[0] === commands.repeat) { 
     let user = message.mentions.members.first();
     console.log(user.kick())
     let textCommand = message.content.split(" ")
@@ -22,20 +22,21 @@ client.on('message', message => {
 });
 
 client.on('message', message => {
-  if (message.content.split(" ")[0] === commands.gfall){
-    //if (message.member.roles.find(role => role.name === 'The Boyare')){}
-    if (typeof(message.content.split(" ")[2]) !== 'string'){
+  if (message.content.split(" ")[0] === commands.gfall){ // CHECK IS THERE ARE ANY FALL COMMAND
+    //if (message.member.roles.find(role => role.name === 'The Boyare')){} CHECKING OF THE ROLE
+    if (typeof(message.content.split(" ")[2]) !== 'string'){ //WRONG MESSAGE OF SYNTAX
       message.reply('clarify the user\'s misconduct with a comment {b!fall <username> <comment>}')
       
-    }else{
-    let user = message.mentions.members.first();
-    falls_of_users[user] = (falls_of_users[user] || 0) + 1
-    if(falls_of_users[user] >= 3){
-      user.kick()
-      message.reply('User has been kicked, because user has collected 3 falls!')
+    }else{ //DO THE MASSIVE AS A KEY WITH CASES AND FALLS
+      
+    let user = message.mentions.members.first(); //GETTING THE NAME OF THE LAWBREAKER  
+    falls_of_users[user] = (falls_of_users[user] || 0) + 1 //ADD FALL TO COLLECTED FALLS
+    if(falls_of_users[user] >= 3){ //FINAL KICK IF COLLECTED SETTED NUMBERS OF FALLS (THREE)
+      user.kick()// KICK
+      message.reply(user.user.username + ' has been kicked, because user has collected ' + falls_of_users[user] +' fall(s)!')
     }
-    else{
-      message.reply(user.user.username + ' has already collected ' + falls_of_users[user] + ' falls in case of ' + message.content.split(" ").slice(2).join(" ") + "!")
+    else{//THE MESSAGE OF NEW FALL (HASN'T COLLECTED SETTED NUMBER OF FALLS)
+      message.reply(user.user.username + ' has already collected ' + falls_of_users[user] + ' fall(s) in case of ' + message.content.split(" ").slice(2).join(" ") + "!")
     }
   }
   }

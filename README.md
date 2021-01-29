@@ -1,2 +1,2 @@
 # Discord-bot
-It's only a pet project
+It's only a pet project!

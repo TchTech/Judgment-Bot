@@ -8,6 +8,7 @@ const falls_of_users = {}
 
 client.on('ready', () => {
   console.log('I am ready!');
+  console.log(Discord.version)
 });
 
 // Create an event listener for messages

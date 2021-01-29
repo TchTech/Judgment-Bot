@@ -1,5 +1,6 @@
 {
     "repeat": "b!repeat",
     "shop": "b!shop",
-    "gfall": "b!fall"
+    "gfall": "b!fall",
+    "help": "b!help"
 }

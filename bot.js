@@ -5,6 +5,7 @@ const prefix = configfile.prefix
 const token = configfile.token
 const commands = require('./commands.json')
 const falls_of_users = {}
+const help_messages = require('./helps.json')
 
 client.on('ready', () => {
   console.log('I am ready!');
@@ -19,6 +20,12 @@ client.on('message', message => {
     let textCommand = message.content.split(" ")
     let deletedElement = textCommand.splice(0, 1)
     message.reply(message.author.username + ": " + textCommand.join(" "));
+  }
+});
+
+client.on('message', message => {
+  if (message.content.split(" ")[0] === commands.help) { 
+    message.reply(help_messages['eng-help-msg'])
   }
 });
 

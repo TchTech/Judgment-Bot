@@ -14,7 +14,7 @@ client.on('ready', () => {
 // Create an event listener for messages
 client.on('message', message => {
   if (message.content.split(" ")[0] === commands.repeat) { 
-    let user = message.mentions.members.first();
+    //let user = message.mentions.members.first();
     //console.log(user.kick())
     let textCommand = message.content.split(" ")
     let deletedElement = textCommand.splice(0, 1)

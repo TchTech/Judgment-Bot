@@ -42,7 +42,7 @@ client.on("message", (message) => {
       //DO THE MASSIVE AS A KEY WITH CASES AND FALLS
 
       let user = message.mentions.members.first(); //GETTING THE NAME OF THE LAWBREAKER
-      if(user.user == undefined){
+      if(user == undefined){
         message.reply("You've written something wrong. Maybe linked name isn't user's (maybe linked name of role). If you didn't use linked name of the role, try again.")
       } else{
       falls_of_users[user] = (falls_of_users[user] || 0) + 1; //ADD FALL TO COLLECTED FALLS

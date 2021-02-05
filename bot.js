@@ -19,7 +19,7 @@ client.on("message", (message) => {
     //console.log(user.kick())
     let textCommand = message.content.split(" ");
     let deletedElement = textCommand.splice(0, 1);
-    message.reply(message.author.username + " with roles: " + message.member.roles + ", said: " + textCommand.join(" "));
+    message.reply(message.author.username + " with roles: " + roles_array.join(", ") + ", said: " + textCommand.join(" "));
   }
 });
 
@@ -33,7 +33,15 @@ client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.gfall) {
     // CHECK IS THERE ARE ANY FALL COMMAND
     //if (message.member.roles.find(role => role.name === 'The Boyare')){} CHECKING OF THE ROLE
+    
+    let roles_array = []
+    message.member.roles.cache.forEach((a) => {roles_array.push(a.name)})
 
+    if(roles_array.includes("Lawbreaker")){
+      message.reply(
+        message.author.username + " is the Lawbreaker, that's why i will not listen to him!"
+      )
+    }else{
     if (typeof message.content.split(" ")[2] !== "string") {
       //WRONG MESSAGE OF SYNTAX
       message.reply(
@@ -68,6 +76,7 @@ client.on("message", (message) => {
               message.content.split(" ").slice(2).join(" ") +
               "!"
           );
+          }
         }
       }
     }

@@ -2,6 +2,6 @@
     "repeat": "b!repeat",
     "shop": "b!shop",
     "gfall": "b!fall",
-    "help": "b!help"
+    "help": "b!help",
     "conflict": "b!conflict"
 }

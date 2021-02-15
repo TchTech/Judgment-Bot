@@ -19,7 +19,7 @@ client.on("message", (message) => {
     //console.log(user.kick())
     let textCommand = message.content.split(" ");
     let deletedElement = textCommand.splice(0, 1);
-    message.reply(message.author.username + " with roles: " + roles_array.join(", ") + ", said: " + textCommand.join(" "));
+    message.reply(message.author.username  + " said: " + textCommand.join(" "));
   }
 });
 

@@ -1,4 +1,4 @@
 {
-    "eng-help-msg": "Thanks for using our bot, Link! \n Today in an our shop we have thoose commands: \n `b!repeat <some-message>`; \n `b!fall <linked-name-of-user> <some-reason>`: ***SALE! ONLY FOR THE 3 FALLS YOU KICKED FROM THE SERVER!*** \n `b!help`: You've just used this one. *Only English now, but we are looking forward and for the Russian language!*",
+    "eng-help-msg": "Thanks for using our bot, Link! \n Today in an our shop we have thoose commands: \n `b!repeat <some-message>`; \n `b!fall <linked-name-of-user> <some-reason>`: ***SALE! ONLY FOR THE 3 FALLS YOU KICKED FROM THE SERVER!*** \n `b!ruhelp`: Like a `b!help`, but on the russian language \n DO U SPEAK ENGLISH, NI`BB`A?",
     "ru-help-msg": "Спасибо за использование нашего бота, Линк! \n На сегодняшний день мы имеем следующие команды: \n `b!repeat <какой-то-текст>`; \n `b!fall <никнейм-игрока-начинающийся-на- @ > <причина>`: ***СКИДКА! ТОЛЬКО ЗА 3 ФОЛЛА ВЫ БУДЕТЕ ПОДВЕРЖЕНЫ КИКУ ИЗ СЕРВЕРА!*** \n `b!help`: тоже самое что и `b!ruhelp`, но на английском языке! \n *Шутка дня: Знаете кто ещё не использовал такого крутого и полезного инновационного робота? Гитлер.*"
 }

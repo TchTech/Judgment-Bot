@@ -1,20 +1,20 @@
-const Discord = require("discord.js");
-const client = new Discord.Client();
-const configfile = require("./data/config.json");
-const prefix = configfile.prefix;
-const token = configfile.token;
-const commands = require("./commands.json");
+import { Client, version } from "discord.js";
+const client = new Client();
+import { prefix as _prefix, token as _token } from "./data/config.json";
+const prefix = _prefix;
+const token = _token;
+import { repeat, help, gfall, conflict } from "./commands.json";
 const falls_of_users = {};
-const help_messages = require("./helps.json");
+import help_messages from "./helps.json";
 
 client.on("ready", () => {
   console.log("I am ready!");
-  console.log(Discord.version);
+  console.log(version);
 });
 
 // Create an event listener for messages
 client.on("message", (message) => {
-  if (message.content.split(" ")[0] === commands.repeat) {
+  if (message.content.split(" ")[0] === repeat) {
     //let user = message.mentions.members.first();
     //console.log(user.kick())
     let textCommand = message.content.split(" ");
@@ -24,13 +24,13 @@ client.on("message", (message) => {
 });
 
 client.on("message", (message) => {
-  if (message.content.split(" ")[0] === commands.help) {
+  if (message.content.split(" ")[0] === help) {
     message.reply(help_messages["eng-help-msg"]);
   }
 });
 
 client.on("message", (message) => {
-  if (message.content.split(" ")[0] === commands.gfall) {
+  if (message.content.split(" ")[0] === gfall) {
     // CHECK IS THERE ARE ANY FALL COMMAND
     //if (message.member.roles.find(role => role.name === 'The Boyare')){} CHECKING OF THE ROLE
     
@@ -84,7 +84,7 @@ client.on("message", (message) => {
 });
 
 client.on("message", (message) => {
-  if (message.content.split(" ")[0] === commands.conflict) {
+  if (message.content.split(" ")[0] === conflict) {
     
   }
 });

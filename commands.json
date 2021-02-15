@@ -2,6 +2,8 @@
     "repeat": "b!repeat",
     "shop": "b!shop",
     "gfall": "b!fall",
+    "en-help": "b!enghelp",
+    "conflict": "b!conflict",
     "help": "b!help",
-    "conflict": "b!conflict"
+    "ru_help": "b!ruhelp"
 }

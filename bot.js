@@ -30,6 +30,12 @@ client.on("message", (message) => {
 });
 
 client.on("message", (message) => {
+  if (message.content.split(" ")[0] === commands.ru_help) {
+    message.reply(help_messages["ru-help-msg"]);
+  }
+});
+
+client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.gfall) {
     // CHECK IS THERE ARE ANY FALL COMMAND
     //if (message.member.roles.find(role => role.name === 'The Boyare')){} CHECKING OF THE ROLE

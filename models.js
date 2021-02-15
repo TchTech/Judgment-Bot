@@ -34,19 +34,19 @@ var conflictSchema = mongoose.Schema({
 	
 var Conflict = mongoose.model('Conflict', conflictSchema);
 
-export default function createUser(){
-	mongoose.connect('mongodb://localhost/judgment-bot-discord.users', function (err) {
+function createUser(name, id, falls, conflicts, servers_member, profile_pic_link){
+	mongoose.connect('mongodb://localhost/judgment-bot-discord', function (err) {
 		if (err) throw err;
 		console.log('Successfully connected');
 		
 		var newUser = new User({
-			_id: mongoose.Schema.Types.ObjectId,
-		nickname: 'keklol',
-		ds_id: 807560705799880774,
-		falls: 0,
-		conficts_member: [1],
-		connected_servers: [678676786786, 567567565567, 656756],
-		profile_picture: 'https://hgjhgjhgjhg.com',
+		_id: new mongoose.Types.ObjectId(),
+		nickname: name,
+		ds_id:  id ,
+		falls: falls ,
+		conficts_member: conflicts ,
+		connected_servers: servers_member ,
+		profile_picture: profile_pic_link ,
 		});
 	
 		newUser.save(function(err) {
@@ -55,6 +55,11 @@ export default function createUser(){
 			console.log('User successfully saved.');
 	});
 	})};
+
+//createUser('keklol', 807560705799880774, 0, [1], [678676786786, 567567565567, 656756], 'https://hgjhgjhgjhg.com')
+
+module.exports = User;
+module.exports = createUser;
 /*
 mongoose.connect('mongodb://localhost/judgment-bot-discord', function (err) {
     if (err) throw err;

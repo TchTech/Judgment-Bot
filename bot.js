@@ -6,6 +6,12 @@ const token = configfile.token;
 const commands = require("./commands.json");
 const falls_of_users = {};
 const help_messages = require("./helps.json");
+const db_work = require("./db_work");
+var is_allowed_to_fall = true
+
+function fallsPermission(){
+  is_allowed_to_fall = true;
+}
 
 client.on("ready", () => {
   console.log("I am ready!");
@@ -62,6 +68,9 @@ client.on("message", (message) => {
           "You've written something wrong. Maybe linked name isn't user's (maybe linked name of role). If you didn't use linked name of the role, try again."
         );
       } else {
+        if(is_allowed_to_fall === false){
+          message.reply("Sorry, I have not got that permission now. Try to wait for a while...")
+        }else{
         falls_of_users[user] = (falls_of_users[user] || 0) + 1; //ADD FALL TO COLLECTED FALLS
         if (falls_of_users[user] >= 3) {
           //FINAL KICK IF COLLECTED SETTED NUMBERS OF FALLS (THREE)
@@ -82,7 +91,9 @@ client.on("message", (message) => {
               message.content.split(" ").slice(2).join(" ") +
               "!"
           );
-          }
+          is_allowed_to_fall = false;
+          setTimeout(fallsPermission, 1800000, 'funky')
+          }}
         }
       }
     }
@@ -91,7 +102,7 @@ client.on("message", (message) => {
 
 client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.conflict) {
-    
+    message.author.id
   }
 });
 

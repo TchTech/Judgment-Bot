@@ -6,8 +6,9 @@ const token = configfile.token;
 const commands = require("./commands.json");
 const falls_of_users = {};
 const help_messages = require("./helps.json");
-const db_work = require("./db_work");
-var is_allowed_to_fall = true
+//const db_work = require("./db_work");
+var is_allowed_to_fall = true;
+const conflicts = {};
 
 function fallsPermission(){
   is_allowed_to_fall = true;
@@ -102,8 +103,17 @@ client.on("message", (message) => {
 
 client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.conflict) {
-    message.author.id
-  }
+    let lawbreaker = message.mentions.members.first()
+        conflicts[message.mentions.members.first()] = {
+      reporter: message.author.username,
+      reason: message.content.split(' ').slice(3).join(" "),
+      punishment: message.content.split(" ").slice(2, 3).join(" ")}
+      //console.log(conflicts[message.mentions.members.first()])
+      //message.reply('Предстать @everyone перед судом! На данный момент ' + conflicts[message.mentions.members.first()].reporter + ' устроил конфликт с ' + lawbreaker.user.username + ' из-за того, что ' + conflicts[message.mentions.members.first()].reason + '.\nПредложенное решение: ' + conflicts[message.mentions.members.first()].punishment + '.')
+      message.channel.send('Предстать @everyone перед судом! На данный момент ' + conflicts[message.mentions.members.first()].reporter + ' устроил конфликт с ' + lawbreaker.user.username + ' из-за того, что ' + conflicts[message.mentions.members.first()].reason + '.\nПредложенное решение: ' + conflicts[message.mentions.members.first()].punishment + '.')
+      .then((m)=>{m.react('👍')
+                  m.react('👎')})
+    }
 });
 
 client.login(token);

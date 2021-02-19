@@ -75,13 +75,18 @@ client.on("message", (message) => {
         falls_of_users[user] = (falls_of_users[user] || 0) + 1; //ADD FALL TO COLLECTED FALLS
         if (falls_of_users[user] >= 3) {
           //FINAL KICK IF COLLECTED SETTED NUMBERS OF FALLS (THREE)
-          user.kick(); // KICK
+          let bool_err = false;
+          user.kick().catch((err)=>{message.reply("ERROR APPEARED: " + err.message)
+          bool_err = true});
+         // KICK
+         if(bool_err != true){
           message.reply(
             user.user.username +
               " has been kicked, because user has collected " +
               falls_of_users[user] +
               " fall(s)!"
           );
+         }
         } else {
           //THE MESSAGE OF NEW FALL (HASN'T COLLECTED SETTED NUMBER OF FALLS)
           message.reply(
@@ -92,8 +97,8 @@ client.on("message", (message) => {
               message.content.split(" ").slice(2).join(" ") +
               "!"
           );
-          is_allowed_to_fall = false;
-          setTimeout(fallsPermission, 1800000, 'funky')
+          //is_allowed_to_fall = false;
+          //setTimeout(fallsPermission, 1800000, 'funky')
           }}
         }
       }

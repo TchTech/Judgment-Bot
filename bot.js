@@ -9,9 +9,14 @@ const help_messages = require("./helps.json");
 //const db_work = require("./db_work");
 var is_allowed_to_fall = true;
 const conflicts = {};
+var is_allowed_to_census = true;
 
 function fallsPermission(){
   is_allowed_to_fall = true;
+}
+
+function censusPermission(){
+  is_allowed_to_census = true;
 }
 
 client.on("ready", () => {
@@ -119,6 +124,21 @@ client.on("message", (message) => {
       .then((m)=>{m.react('👍')
                   m.react('👎')})
     }
+});
+
+client.on("message", (message) => {
+  if (message.content.split(" ")[0] === commands.census) {
+      if(is_allowed_to_census === false){
+        message.reply('Sorry, please, you should wait for a while, because censuses are created too often.');
+      }else{
+    //message.reply('Предстать @everyone перед судом! На данный момент ' + conflicts[message.mentions.members.first()].reporter + ' устроил конфликт с ' + lawbreaker.user.username + ' из-за того, что ' + conflicts[message.mentions.members.first()].reason + '.\nПредложенное решение: ' + conflicts[message.mentions.members.first()].punishment + '.')
+        let comment = message.content.slice(1);
+        let is_empty = false
+        if(comment === "")is_empty = true;
+        is_empty ? message.channel.send('Внимание, @everyone , была предложена перепись мнения (ну или сенсус). Настоятельно предлагаем поучавствовать в голосовании-опросе:\n *Довольны ли вы устройством сервера?*').then((m)=>{m.react('👍'); m.react('👎')}) : message.channel.send('Внимание, @everyone , была предложена перепись мнения (ну или сенсус). Настоятельно предлагаем поучавствовать в голосовании-опросе:\n *"' + comment + '"*').then((m)=>{m.react('👍'); m.react('👎')})
+        is_allowed_to_census = false;
+        setTimeout(censusPermission, 360000, 'funky');
+    }}
 });
 
 client.login(token);

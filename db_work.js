@@ -59,14 +59,14 @@ function createUser(name, id, falls, conflicts, servers_member, profile_pic_link
 	});
 })};
 
-function findUser(name, id, falls, conflicts, servers_member, profile_pic_link){
+function findUser(id){
 	mongoose.connect('mongodb+srv://admin:kira2007@bot.ljnsg.mongodb.net/judgment-bot-discord?retryWrites=true&w=majority', function (err, client) {
 		if (err) throw err;
 		console.log('Successfully connected');
 		mongoose.connection.db.collection("users", function(err, collection){
 			if (err) throw err;
 			console.log('Successfully connected to collection');
-			collection.findOne
+			collection.findOne({ds_id: id})
 			/*var newUser = new User({
 				_id: new mongoose.Types.ObjectId(),
 				nickname: name,
@@ -87,8 +87,8 @@ function findUser(name, id, falls, conflicts, servers_member, profile_pic_link){
 })};
 findUser(0,0,0,0,0,0)
 //createUser('keklol', 807560705799880774, 0, [1], [678676786786, 567567565567, 656756], 'https://hgjhgjhgjhg.com')
-module.exports = User;
-module.exports = createUser;
+//module.exports = User;
+module.exports = createUser, User;
 /*
 mongoose.connect('mongodb://localhost/judgment-bot-discord', function (err) {
     if (err) throw err;

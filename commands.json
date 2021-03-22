@@ -6,5 +6,6 @@
     "conflict": "b!conflict",
     "help": "b!help",
     "ru_help": "b!ruhelp",
-    "census": "b!census"
+    "census": "b!census",
+    "registartion": "b!reg"
 }

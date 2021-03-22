@@ -236,6 +236,11 @@ client.on("message", (message) => {
 })
 
 client.on("message", (message) => {
+  if (message.content.split(" ")[0] === commands.introducing){
+    message.reply("Настоящее сообщение с 22.03.21 (0.3):\n*Предлагаем вам внести свои данные в базу данных для получения возможности конфликтов.\n И да... насчет конфликтов... на даный момент команда `b!conflict <нарушитель> <наказание (fall-kick-ban)> <причина>` не работает (НЕ ИСПОЛЬЗУЙТЕ ЕЁ), но разработка ведется до сих пор.\nВводить `b!reg` не обязательно, но тем самым вы поможете разработке. Конец сообщения.*")
+}})
+
+client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.conflict) {
     let conflict_id = new mongoose.Types.ObjectId();
     let lawbreaker = message.mentions.members.first();

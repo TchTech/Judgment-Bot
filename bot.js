@@ -187,7 +187,7 @@ function conflictConfirmation(msg, conflict_id_str, punishment){
               if(err) throw err;
               console.log(user)
               let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString())
-              msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" + user_lawbreaker.user.username + "`;\n На данный момент у `" + user_lawbreaker.user.username + "` `" + (user.falls + 1) + "` фолла;");
+              msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" + user_lawbreaker.user.username + "`;\n На данный момент у `" + user_lawbreaker.user.username + "` `" + (user.falls + 1) + "` фолл(а);");
               if((user.falls + 1) >= 3){
                 if(user_lawbreaker.kickable === false){msg.channel.send("ERROR: USER ISN'T KICKABLE. HE'S FALLS: `" + user.falls + "`\nномер конфликта: `" + conflict_id_str + "`")}
                 else{
@@ -251,6 +251,13 @@ client.on("message", (message) => {
 
 client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.conflict) {
+    if(message.mentions.members.first() === undefined){
+      message.reply("Error: вы не указали пользователя, которого хотите осудить.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
+    } else if(message.content.split(" ")[3] === undefined){
+      message.reply("Error: вы не указали причину вашего обращения.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
+    } else if(message.content.split(" ")[2] !== "fall" && message.content.split(" ")[2] !== "ban" && message.content.split(" ")[2] !== "kick"){
+      message.reply("Error: вы указали неверное значение наказания (или не указали его вовсе). Корректные значения: `fall`, `kick`, `ban`.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
+    } else{
     let conflict_id = new mongoose.Types.ObjectId();
     let lawbreaker = message.mentions.members.first();
     let author_in_db;
@@ -331,7 +338,7 @@ client.on("message", (message) => {
     //console.log(conflicts[message.mentions.members.first()])
     //message.reply('Предстать @everyone перед судом! На данный момент ' + conflicts[message.mentions.members.first()].reporter + ' устроил конфликт с ' + lawbreaker.user.username + ' из-за того, что ' + conflicts[message.mentions.members.first()].reason + '.\nПредложенное решение: ' + conflicts[message.mentions.members.first()].punishment + '.')
   }
-});
+}});
 
 client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.census) {

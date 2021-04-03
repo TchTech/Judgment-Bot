@@ -257,7 +257,7 @@ client.on("message", (message) => {
       message.reply("Error: вы не указали причину вашего обращения.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
     } else if(message.content.split(" ")[2] !== "fall" && message.content.split(" ")[2] !== "ban" && message.content.split(" ")[2] !== "kick"){
       message.reply("Error: вы указали неверное значение наказания (или не указали его вовсе). Корректные значения: `fall`, `kick`, `ban`.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
-    } else{
+    } else{ //CHECK IN DB
     let conflict_id = new mongoose.Types.ObjectId();
     let lawbreaker = message.mentions.members.first();
     let author_in_db;

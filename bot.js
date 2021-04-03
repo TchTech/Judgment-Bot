@@ -182,18 +182,26 @@ function conflictConfirmation(msg, conflict_id_str, punishment){
           decline_votes: negative_votes.count, 
         is_confirmed: "YES"}, (err, conflict)=>{if(err) throw err
           mongoose.connection.db.collection('users', (err)=>{
-            user_model.findOneAndUpdate({ds_id: conflict.lawbreaker}, {$inc: {'ds_id': 1}}, (err, user)=>{
-              if(user.falls >= 3){
-                user_model.findOneAndUpdate({ds_id: conflict.lawbreaker}, {falls: 0})
-                console.log(msg.guild.cache.get(conflict.lawbreaker))
+            console.log(conflict.lawbreaker.toString())
+            user_model.findOneAndUpdate({ds_id: conflict.lawbreaker.toString()}, {$inc: {'falls': 1}}, (err, user)=>{
+              if(err) throw err;
+              console.log(user)
+              let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString())
+              msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" + user_lawbreaker.user.username + "`;\n На данный момент у `" + user_lawbreaker.user.username + "` `" + (user.falls + 1) + "` фолла;");
+              if((user.falls + 1) >= 3){
+                if(user_lawbreaker.kickable === false){msg.channel.send("ERROR: USER ISN'T KICKABLE. HE'S FALLS: `" + user.falls + "`\nномер конфликта: `" + conflict_id_str + "`")}
+                else{
+                user_model.findOneAndUpdate({ds_id: conflict.lawbreaker.toString()}, {falls: 0}, (err)=>{if(err)throw err})
+                msg.channel.send("Пользователь `" + user_lawbreaker.user.username + "` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `" + conflict_id_str + "`), а значит суд изгоняет его из сервера! GOODBYE!")
+                user_lawbreaker.kick()
+                }
               }
             })
           })})
-        
         break;
       }
     }else if(positive_votes.count < negative_votes.count){
-      console.log('Noo')
+      msg.channel.send("")
     }else if(positive_votes.count === negative_votes.count){
       console.log('Equalss')
     }
@@ -217,6 +225,7 @@ function registration_of_user(
 
 client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.registartion){
+    
     mongoose.connect(mongo_uri, (err)=>{
       if(err) throw err
       mongoose.connection.db.collection('users', (err)=>{
@@ -273,7 +282,7 @@ client.on("message", (message) => {
               conflicts[message.mentions.members.first()].reason +
               ".\nПредложенное решение: " +
               conflicts[message.mentions.members.first()].punishment +
-              "."
+              ".\n`ID конфликта: " + conflict_id.toHexString() + "`"
           )
           .then((m) => {
             m.react("👍");

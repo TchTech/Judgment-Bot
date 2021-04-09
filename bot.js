@@ -189,7 +189,7 @@ function conflictConfirmation(msg, conflict_id_str, punishment){
               let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString())
               msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" + user_lawbreaker.user.username + "`;\n На данный момент у `" + user_lawbreaker.user.username + "` `" + (user.falls + 1) + "` фолл(а);");
               if((user.falls + 1) >= 3){
-                if(user_lawbreaker.kickable === false){msg.channel.send("ERROR: USER ISN'T KICKABLE. HE'S FALLS: `" + user.falls + "`\nномер конфликта: `" + conflict_id_str + "`")}
+                if(user_lawbreaker.kickable === false){msg.channel.send("ERROR: USER ISN'T KICKABLE. HIS FALLS: `" + user.falls + "`\nномер конфликта: `" + conflict_id_str + "`")}
                 else{
                 user_model.findOneAndUpdate({ds_id: conflict.lawbreaker.toString()}, {falls: 0}, (err)=>{if(err)throw err})
                 msg.channel.send("Пользователь `" + user_lawbreaker.user.username + "` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `" + conflict_id_str + "`), а значит суд изгоняет его из сервера! GOODBYE!")
@@ -199,11 +199,41 @@ function conflictConfirmation(msg, conflict_id_str, punishment){
             })
           })})
         break;
+        case "kick":
+          conflict_model.findByIdAndUpdate(conflict_id_str, {support_votes: positive_votes.count,
+            decline_votes: negative_votes.count, 
+          is_confirmed: "YES"}, (err, conflict)=>{if(err) throw err
+            let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString())
+            if(user_lawbreaker.kickable === false){
+              msg.channel.send("ERROR: USER ISN'T KICKABLE\nномер конфликта: `" + conflict_id_str + "`")
+            }else{
+            msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `kick` для `" + user_lawbreaker.user.username + "`");
+            user_lawbreaker.kick()
+          }})
+          break;
+        case "ban":
+          conflict_model.findByIdAndUpdate(conflict_id_str, {support_votes: positive_votes.count,
+            decline_votes: negative_votes.count, 
+          is_confirmed: "YES"}, (err, conflict)=>{if(err) throw err
+            let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString())
+            msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `ban` для `" + user_lawbreaker.user.username + "`\n*(start process...)*")
+            try{
+              user_lawbreaker.ban()
+              msg.channel.send("Процесс бана по конфликту номер `" + conflict_id_str + "` прошел успешно.")
+            } catch{
+              msg.channel.send("ERROR: USER COULD NOT BE BANNED.\nномер конфликта: `" + conflict_id_str + "`")
+            }})
       }
     }else if(positive_votes.count < negative_votes.count){
-      msg.channel.send("")
+      conflict_model.findByIdAndUpdate(conflict_id_str, {support_votes: positive_votes.count,
+        decline_votes: negative_votes.count, 
+      is_confirmed: "NO"}, (err, conflict)=>{if(err) throw err
+      msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` НЕ было вынесено решения, так как оказалось больше отрицательных, чем положительных голосов!")})
     }else if(positive_votes.count === negative_votes.count){
-      console.log('Equalss')
+      conflict_model.findByIdAndUpdate(conflict_id_str, {support_votes: positive_votes.count,
+        decline_votes: negative_votes.count, 
+      is_confirmed: "NO"}, (err, conflict)=>{if(err) throw err
+      msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` НЕ было вынесено решения, так как оказалось положительных и отрицательных голосов оказалось по-ровну!")})
     }
   }catch(err){
     console.log(err)

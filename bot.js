@@ -325,7 +325,7 @@ client.on("message", (message) => {
             m.react("👍");
             m.react("👎");
             try{
-              setTimeout(/*43200000*/conflictConfirmation, 20000, m, conflict_id._id.toHexString(), conflicts[message.mentions.members.first()].punishment)
+              setTimeout(/*43200000*/conflictConfirmation, 43200000, m, conflict_id._id.toHexString(), conflicts[message.mentions.members.first()].punishment)
               } catch(e){
                 console.log(e)
               }

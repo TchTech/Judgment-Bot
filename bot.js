@@ -35,6 +35,9 @@ function createUser(
   servers_member,
   profile_pic_link
 ) {
+  mongoose.set('useFindAndModify', true)
+    mongoose.set('useNewUrlParser', true)
+    mongoose.set('useUnifiedTopology', true)
   mongoose.connect(mongo_uri, function (err, client) {
     if (err) throw err;
     console.log("Successfully connected");
@@ -161,10 +164,10 @@ client.on("message", (message) => {
   }
 });
 
-function jundgment(){}
-
 function conflictConfirmation(msg, conflict_id_str, punishment){
   mongoose.set('useFindAndModify', true)
+    mongoose.set('useNewUrlParser', true)
+    mongoose.set('useUnifiedTopology', true)
   mongoose.connect(mongo_uri, (err)=>{
      if(err) throw err
      mongoose.connection.db.collection('conflicts', (err)=>{
@@ -241,18 +244,6 @@ function conflictConfirmation(msg, conflict_id_str, punishment){
 })})
 }
 
-
-function registration_of_user(
-  name,
-  id,
-  falls,
-  conflicts,
-  servers_member,
-  profile_pic_link
-) {
-  createUser(name, id, falls, conflicts, servers_member, profile_pic_link);
-}
-
 client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.registartion){
     
@@ -289,11 +280,12 @@ client.on("message", (message) => {
       message.reply("Error: вы указали неверное значение наказания (или не указали его вовсе). Корректные значения: `fall`, `kick`, `ban`.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
     } else if(message.mentions.members.first().user.id === "799723410572836874"){
       message.reply("Error: Ты серьёзно? Ты пошел жаловаться на суд в суд..? Не-а, так не получится.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
+    } else if(message.author.id === message.mentions.members.first().id){
+      message.reply("Error: извините, но вы не можете жаловаться на самого себя.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
     }
     else{ //CHECK IN DB
     let conflict_id = new mongoose.Types.ObjectId();
     let lawbreaker = message.mentions.members.first();
-    let author_in_db;
     let authors_id = message.author.id;
     console.log(authors_id);
     //createUser(message.author.username, message.author.id, 0, [0], [message.guild.id], message.author.avatarURL())
@@ -304,8 +296,19 @@ client.on("message", (message) => {
       if (err) throw err;
       mongoose.connection.db.collection("users", (err) => {
         if (err) throw err;
-        author_in_db = user_model.findOne({ ds_id: authors_id }, (err) => {
+        user_model.findOne({ ds_id: authors_id }, (err, user) => {
           if (err) throw err;
+          if(user === null){
+            createUser(message.author.username, message.author.id, 0, [0], [message.guild.id], message.author.avatarURL())
+            message.reply("Уупс... Вы не были занесены в базу даных... Но мы сами (автоматически) добавили вас в базу!\n(*Продолжаем оформление конфликта...*)")
+          }
+        });
+        user_model.findOne({ ds_id: lawbreaker.user.id }, (err, user) => {
+          if (err) throw err;
+          if(user === null){
+            createUser(lawbreaker.user.username, lawbreaker.user.id, 0, [0], [message.guild.id], lawbreaker.user.avatarURL())
+            message.reply("Уупс... Преступник не был занесён в базу даных... Но мы сами (автоматически) добавили его(её) в базу!\n(*Продолжаем оформление конфликта...*)")
+          }
         });
         conflicts[message.mentions.members.first()] = {
           reporter: message.author.username,

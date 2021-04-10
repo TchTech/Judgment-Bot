@@ -287,7 +287,10 @@ client.on("message", (message) => {
       message.reply("Error: вы не указали причину вашего обращения.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
     } else if(message.content.split(" ")[2] !== "fall" && message.content.split(" ")[2] !== "ban" && message.content.split(" ")[2] !== "kick"){
       message.reply("Error: вы указали неверное значение наказания (или не указали его вовсе). Корректные значения: `fall`, `kick`, `ban`.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
-    } else{ //CHECK IN DB
+    } else if(message.mentions.members.first().user.id === "799723410572836874"){
+      message.reply("Error: Ты серьёзно? Ты пошел жаловаться на суд в суд..? Не-а, так не получится.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`")
+    }
+    else{ //CHECK IN DB
     let conflict_id = new mongoose.Types.ObjectId();
     let lawbreaker = message.mentions.members.first();
     let author_in_db;
@@ -325,7 +328,7 @@ client.on("message", (message) => {
             m.react("👍");
             m.react("👎");
             try{
-              setTimeout(/*43200000*/conflictConfirmation, 43200000, m, conflict_id._id.toHexString(), conflicts[message.mentions.members.first()].punishment)
+              setTimeout(/*43200000*/conflictConfirmation, 7200000, m, conflict_id._id.toHexString(), conflicts[message.mentions.members.first()].punishment)
               } catch(e){
                 console.log(e)
               }

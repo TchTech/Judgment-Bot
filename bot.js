@@ -407,7 +407,7 @@ client.on("message", (message) => {
               m.react("👎");
             });
       is_allowed_to_census = false;
-      setTimeout(censusPermission, 360000, "funky");
+      setTimeout(censusPermission, 360000);
     }
   }
 });

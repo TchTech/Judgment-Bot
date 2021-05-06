@@ -181,67 +181,117 @@ function conflictConfirmation(msg, conflict_id_str, punishment){
     if(positive_votes.count > negative_votes.count){
       switch(punishment){
         case "fall":
-          conflict_model.findByIdAndUpdate(conflict_id_str, {support_votes: positive_votes.count,
-          decline_votes: negative_votes.count, 
-        is_confirmed: "YES"}, (err, conflict)=>{if(err) throw err
-          mongoose.connection.db.collection('users', (err)=>{
-            console.log(conflict.lawbreaker.toString())
-            user_model.findOneAndUpdate({ds_id: conflict.lawbreaker.toString()}, {$inc: {'falls': 1}}, (err, user)=>{
-              if(err) throw err;
-              console.log(user)
-              let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString())
-              msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" + user_lawbreaker.user.username + "`;\n На данный момент у `" + user_lawbreaker.user.username + "` `" + (user.falls + 1) + "` фолл(а);");
-              if((user.falls + 1) >= 3){
-                if(user_lawbreaker.kickable === false){msg.channel.send("ERROR: USER ISN'T KICKABLE. HIS FALLS: `" + user.falls + "`\nномер конфликта: `" + conflict_id_str + "`")}
-                else{
-                user_model.findOneAndUpdate({ds_id: conflict.lawbreaker.toString()}, {falls: 0}, (err)=>{if(err)throw err})
-                msg.channel.send("Пользователь `" + user_lawbreaker.user.username + "` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `" + conflict_id_str + "`), а значит суд изгоняет его из сервера! GOODBYE!")
-                user_lawbreaker.kick()
-                }
-              }
-            })
-          })})
+          fallProcess(positive_votes, negative_votes);
         break;
         case "kick":
-          conflict_model.findByIdAndUpdate(conflict_id_str, {support_votes: positive_votes.count,
-            decline_votes: negative_votes.count, 
-          is_confirmed: "YES"}, (err, conflict)=>{if(err) throw err
-            let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString())
-            if(user_lawbreaker.kickable === false){
-              msg.channel.send("ERROR: USER ISN'T KICKABLE\nномер конфликта: `" + conflict_id_str + "`")
-            }else{
-            msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `kick` для `" + user_lawbreaker.user.username + "`");
-            user_lawbreaker.kick()
-          }})
+          kickProcess(positive_votes, negative_votes);
           break;
         case "ban":
-          conflict_model.findByIdAndUpdate(conflict_id_str, {support_votes: positive_votes.count,
-            decline_votes: negative_votes.count, 
-          is_confirmed: "YES"}, (err, conflict)=>{if(err) throw err
-            let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString())
-            msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `ban` для `" + user_lawbreaker.user.username + "`\n*(start process...)*")
-            try{
-              user_lawbreaker.ban()
-              msg.channel.send("Процесс бана по конфликту номер `" + conflict_id_str + "` прошел успешно.")
-            } catch{
-              msg.channel.send("ERROR: USER COULD NOT BE BANNED.\nномер конфликта: `" + conflict_id_str + "`")
-            }})
+          banProcess(positive_votes, negative_votes);
+          break;
       }
     }else if(positive_votes.count < negative_votes.count){
-      conflict_model.findByIdAndUpdate(conflict_id_str, {support_votes: positive_votes.count,
-        decline_votes: negative_votes.count, 
-      is_confirmed: "NO"}, (err, conflict)=>{if(err) throw err
-      msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` НЕ было вынесено решения, так как оказалось больше отрицательных, чем положительных голосов!")})
+      stopProcessLess(positive_votes, negative_votes);
     }else if(positive_votes.count === negative_votes.count){
-      conflict_model.findByIdAndUpdate(conflict_id_str, {support_votes: positive_votes.count,
-        decline_votes: negative_votes.count, 
-      is_confirmed: "NO"}, (err, conflict)=>{if(err) throw err
-      msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` НЕ было вынесено решения, так как оказалось положительных и отрицательных голосов оказалось по-ровну!")})
+      stopProcessEqual(positive_votes, negative_votes);
     }
   }catch(err){
     console.log(err)
   }
 })})
+
+  function stopProcessEqual(positive_votes, negative_votes) {
+    conflict_model.findByIdAndUpdate(conflict_id_str, {
+      support_votes: positive_votes.count,
+      decline_votes: negative_votes.count,
+      is_confirmed: "NO"
+    }, (err, conflict) => {
+      if (err)
+        throw err;
+      msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` НЕ было вынесено решения, так как оказалось положительных и отрицательных голосов оказалось по-ровну!");
+    });
+  }
+
+  function stopProcessLess(positive_votes, negative_votes) {
+    conflict_model.findByIdAndUpdate(conflict_id_str, {
+      support_votes: positive_votes.count,
+      decline_votes: negative_votes.count,
+      is_confirmed: "NO"
+    }, (err, conflict) => {
+      if (err)
+        throw err;
+      msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` НЕ было вынесено решения, так как оказалось больше отрицательных, чем положительных голосов!");
+    });
+  }
+
+  function fallProcess(positive_votes, negative_votes) {
+    conflict_model.findByIdAndUpdate(conflict_id_str, {
+      support_votes: positive_votes.count,
+      decline_votes: negative_votes.count,
+      is_confirmed: "YES"
+    }, (err, conflict) => {
+      if (err)
+        throw err;
+      mongoose.connection.db.collection('users', (err) => {
+        console.log(conflict.lawbreaker.toString());
+        user_model.findOneAndUpdate({ ds_id: conflict.lawbreaker.toString() }, { $inc: { 'falls': 1 } }, (err, user) => {
+          if (err)
+            throw err;
+          console.log(user);
+          let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString());
+          msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" + user_lawbreaker.user.username + "`;\n На данный момент у `" + user_lawbreaker.user.username + "` `" + (user.falls + 1) + "` фолл(а);");
+          if ((user.falls + 1) >= 3) {
+            if (user_lawbreaker.kickable === false) { msg.channel.send("ERROR: USER ISN'T KICKABLE. HIS FALLS: `" + user.falls + "`\nномер конфликта: `" + conflict_id_str + "`"); }
+            else {
+              user_model.findOneAndUpdate({ ds_id: conflict.lawbreaker.toString() }, { falls: 0 }, (err) => {
+                if (err)
+                  throw err;
+              });
+              msg.channel.send("Пользователь `" + user_lawbreaker.user.username + "` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `" + conflict_id_str + "`), а значит суд изгоняет его из сервера! GOODBYE!");
+              user_lawbreaker.kick();
+            }
+          }
+        });
+      });
+    });
+  }
+
+  function kickProcess(positive_votes, negative_votes) {
+    conflict_model.findByIdAndUpdate(conflict_id_str, {
+      support_votes: positive_votes.count,
+      decline_votes: negative_votes.count,
+      is_confirmed: "YES"
+    }, (err, conflict) => {
+      if (err)
+        throw err;
+      let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString());
+      if (user_lawbreaker.kickable === false) {
+        msg.channel.send("ERROR: USER ISN'T KICKABLE\nномер конфликта: `" + conflict_id_str + "`");
+      } else {
+        msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `kick` для `" + user_lawbreaker.user.username + "`");
+        user_lawbreaker.kick();
+      }
+    });
+  }
+
+  function banProcess(positive_votes, negative_votes) {
+    conflict_model.findByIdAndUpdate(conflict_id_str, {
+      support_votes: positive_votes.count,
+      decline_votes: negative_votes.count,
+      is_confirmed: "YES"
+    }, (err, conflict) => {
+      if (err)
+        throw err;
+      let user_lawbreaker = msg.guild.members.cache.get(conflict.lawbreaker.toString());
+      msg.channel.send("@everyone Внимание! По конфликту №`" + conflict_id_str + "` было вынесено решение в пользу пожаловавшегося!\nРешение: `ban` для `" + user_lawbreaker.user.username + "`\n*(start process...)*");
+      try {
+        user_lawbreaker.ban();
+        msg.channel.send("Процесс бана по конфликту номер `" + conflict_id_str + "` прошел успешно.");
+      } catch {
+        msg.channel.send("ERROR: USER COULD NOT BE BANNED.\nномер конфликта: `" + conflict_id_str + "`");
+      }
+    });
+  }
 }
 
 client.on("message", (message) => {
@@ -336,43 +386,9 @@ client.on("message", (message) => {
                 console.log(e)
               }
           });
-          // var newUser = new user_model({
-          //   _id: new mongoose.Types.ObjectId(),
-          //   nickname: name,
-          //   ds_id: id,
-          //   falls: falls,
-          //   conficts_member: conflicts,
-          //   connected_servers: servers_member,
-          //   profile_picture: profile_pic_link,
-          // });
-    
-          // newUser.save(function (err) {
-          //   if (err) throw err;
-    
-          //   console.log("User successfully saved.");
-          //   mongoose.connection.close();
       });
-      mongoose.connection.db.collection('conflicts', (err)=>{
-        if(err) throw err
-        let newConflict = new conflict_model({
-          _id: conflict_id,
-          case: conflicts[message.mentions.members.first()].reason,
-          reporter: message.author.id,
-          lawbreaker: message.mentions.members.first(),
-		      punishment: conflicts[message.mentions.members.first()].punishment,
-		      support_votes: 1,
-		      decline_votes: 1,
-		      judgment_date: moment().add(12, 'hours').toDate(),
-		      is_confirmed: 'IN_WORK'
-        })
-        newConflict.save((err)=>{if(err) throw err})
-        //console.log(conflict_id._id.toHexString())
-        
-      })
+      createConflict(conflict_id, message);
     });
-
-    //console.log(conflicts[message.mentions.members.first()])
-    //message.reply('Предстать @everyone перед судом! На данный момент ' + conflicts[message.mentions.members.first()].reporter + ' устроил конфликт с ' + lawbreaker.user.username + ' из-за того, что ' + conflicts[message.mentions.members.first()].reason + '.\nПредложенное решение: ' + conflicts[message.mentions.members.first()].punishment + '.')
   }
 }});
 
@@ -413,3 +429,26 @@ client.on("message", (message) => {
 });
 
 client.login(token);
+function createConflict(conflict_id, message) {
+  mongoose.connection.db.collection('conflicts', (err) => {
+    if (err)
+      throw err;
+    let newConflict = new conflict_model({
+      _id: conflict_id,
+      case: conflicts[message.mentions.members.first()].reason,
+      reporter: message.author.id,
+      lawbreaker: message.mentions.members.first(),
+      punishment: conflicts[message.mentions.members.first()].punishment,
+      support_votes: 1,
+      decline_votes: 1,
+      judgment_date: moment().add(12, 'hours').toDate(),
+      is_confirmed: 'IN_WORK'
+    });
+    newConflict.save((err) => {
+      if (err)
+        throw err;
+    });
+
+  });
+}
+

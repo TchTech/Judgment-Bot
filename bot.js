@@ -16,7 +16,7 @@ const mongo_uri =
   "mongodb+srv://admin:kira2007@bot.ljnsg.mongodb.net/judgment-bot-discord";
 var conflict_model = require('./conflict_model');
 const moment = require("moment");
-const { findByIdAndUpdate } = require("./user_model");
+const channel_model = require("./channel_model")
 
 function fallsPermission() {
   is_allowed_to_fall = true;
@@ -64,6 +64,35 @@ function createUser(
   });
 }
 
+function createChannel(title, id, channel_pic){
+  mongoose.set('useFindAndModify', true)
+  mongoose.set('useNewUrlParser', true)
+  mongoose.set('useUnifiedTopology', true)
+  mongoose.connect(mongo_uri, function (err, client) {
+    if (err) throw err;
+    console.log("Successfully connected");
+    mongoose.connection.db.collection("channels", function (err, collection) {
+      if (err) throw err;
+      console.log("Successfully connected to collection");
+      var newChannel = new channel_model({
+        _id: new mongoose.Types.ObjectId(),
+        name: title,
+        ds_id: id,
+        falls: {},
+        scores: {},
+        channel_picture: channel_pic,
+      });
+
+      newChannel.save(function (err) {
+        if (err) throw err;
+
+        console.log("Channel successfully saved.");
+        mongoose.connection.close();
+      });
+    });
+  });
+}
+
 client.on("ready", () => {
   console.log("I am ready!");
   console.log(Discord.version);
@@ -77,6 +106,7 @@ client.on("message", (message) => {
     let textCommand = message.content.split(" ");
     let deletedElement = textCommand.splice(0, 1);
     message.reply(message.author.username + " said: " + textCommand.join(" "));
+    console.log(message.author.username + " said: " + textCommand.join(" "))
   }
 });
 
@@ -88,7 +118,22 @@ client.on("message", (message) => {
 
 client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.ru_help) {
-    message.reply(help_messages["ru-help-msg"]);
+    //message.reply(help_messages["ru-help-msg"]);
+    const helpEmbed = new Discord.MessageEmbed()
+	.setColor('#a6550c')
+	.setTitle('***Help page***')
+  .setThumbnail(message.author.avatarURL())
+	.setDescription('Последнее сообщение (07.05.2021)')
+	.addFields(
+		{ name: '`b!help`', value: 'тоже самое что и `b!ruhelp`, но на английском языке!' },
+    { name: '`b!repeat <message>`', value: 'Повторение `message`.' },
+		{ name: '`b!conflict <linked-users-name> <punishment {fall, kick, ban}> <case>`', value: 'Краеугольная функция нашего бота. Она позволяет сделать конфликт (пожаловаться) на преступника. Решение выносится через 2 часа. Опробуйте её!', inline: true },
+		{ name: '`b!fall <linked-users-name> <case>`', value: '***ДАННАЯ ФУНКЦИЯ НЕ РАБОТАЕТ НА ДАННЫЙ МОМЕНТ!*** Выдает предупреждение преступнику. За 3 фолла - кик!', inline: true },
+	)
+	.setTimestamp()
+	.setFooter('Judgment-bot by TchTech', 'https://cdn.discordapp.com/app-icons/799723410572836874/683e0c1d8a42a80bc4fd727cccafec85.png');
+
+message.channel.send(helpEmbed);
   }
 });
 
@@ -163,6 +208,18 @@ client.on("message", (message) => {
     }
   }
 });
+
+client.on("message", (message)=>{
+  /*mongoose.set('useFindAndModify', true)
+  mongoose.set('useNewUrlParser', true)
+  mongoose.set('useUnifiedTopology', true)
+  mongoose.connect(mongo_uri, (err)=>{
+     if(err) throw err
+     mongoose.connection.db.collection('channels', (err)=>{
+        if(err) throw err
+
+     })})*/
+})
 
 function conflictConfirmation(msg, conflict_id_str, punishment){
   mongoose.set('useFindAndModify', true)
@@ -295,7 +352,7 @@ function conflictConfirmation(msg, conflict_id_str, punishment){
 }
 
 client.on("message", (message) => {
-  if (message.content.split(" ")[0] === commands.registartion){
+  if (message.content.split(" ")[0] === commands.uregistration){
     
     mongoose.connect(mongo_uri, (err)=>{
       if(err) throw err
@@ -308,6 +365,27 @@ client.on("message", (message) => {
             message.reply("You was included to database successfully! Now you have ability for conflicts! Hooray!🎆\n*Вы были успешно добавлены в базу данных! Отныне у вас есть возможность конфликтовать! Урра!🎆*")
           }else{
             message.reply("Oops... You was already included to database. You've already got conflict ability.\n*Упс... Вы уже были добавлены в базу данных. Вы уже получили возможность конфликтовать.*")
+          }
+        })
+      }) 
+    })
+  }
+})
+
+client.on("message", (message) => {
+  if (message.content.split(" ")[0] === commands.cregistration){
+    
+    mongoose.connect(mongo_uri, (err)=>{
+      if(err) throw err
+      mongoose.connection.db.collection('channels', (err)=>{
+        if(err) throw err
+        channel_model.findOne({ds_id: message.guild.id}, (err, channel)=>{
+          if(err) throw err
+          if(channel == undefined){
+            createChannel(message.guild.name, message.guild.id, message.guild.iconURL())
+            message.reply("Channel was included to database successfully! Now you have many abilities like score-getting! Hooray!🎆\n*Канал был успешно добавлен в базу данных! Отныне у вас есть возможности вроде получения баллов! Урра!🎆*")
+          }else{
+            message.reply("Oops... You was already included to database.\n*Упс... Вы уже были добавлены в базу данных.*")
           }
         })
       }) 

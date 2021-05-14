@@ -7,6 +7,7 @@
     "help": "b!help",
     "ru_help": "b!ruhelp",
     "census": "b!census",
-    "registartion": "b!reg",
+    "uregistration": "b!ureg",
+    "cregistration": "b!creg",
     "introducing": "b!hi"
 }

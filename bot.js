@@ -18,6 +18,11 @@ var conflict_model = require('./conflict_model');
 const moment = require("moment");
 const channel_model = require("./channel_model")
 
+function randomNumber(min, max){
+  const r = Math.random()*(max-min) + min
+  return Math.floor(r)
+}
+
 function fallsPermission() {
   is_allowed_to_fall = true;
 
@@ -79,7 +84,7 @@ function createChannel(title, id, channel_pic){
         name: title,
         ds_id: id,
         falls: {},
-        scores: {},
+        scores: "{}",
         channel_picture: channel_pic,
       });
 
@@ -210,15 +215,25 @@ client.on("message", (message) => {
 });
 
 client.on("message", (message)=>{
-  /*mongoose.set('useFindAndModify', true)
+  mongoose.set('useFindAndModify', true)
   mongoose.set('useNewUrlParser', true)
   mongoose.set('useUnifiedTopology', true)
   mongoose.connect(mongo_uri, (err)=>{
      if(err) throw err
      mongoose.connection.db.collection('channels', (err)=>{
         if(err) throw err
-
-     })})*/
+        let authors_id = message.author.id.toString()
+        channel_model.findOne({ds_id: message.guild.id}, (err, channel)=>{
+          console.log(err, channel)
+          if(err) throw err
+          console.log("SSGG")
+          let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)))
+          //if(Object.keys(obj).includes(authors_id) === false){console.log("no user", Object.keys(obj))//channel.scores.set(authors_id) = Math.random() + 9obj[authors_id] += Math.random() + 9;Object.assign(obj, {[authors_id]: 0})obj[authors_id] += 9 + randomNumber(0, 4)}else{console.log("all ok", Object.values(obj))//channel.scores.set(authors_id) = channel.scores.get(authors_id) + Math.random() + 9}
+          obj[authors_id] = (obj[authors_id] || 0) + 9 + randomNumber(0, 4)
+          channel.scores = JSON.stringify(obj)
+          channel.save()
+        })
+     })})
 })
 
 function conflictConfirmation(msg, conflict_id_str, punishment){

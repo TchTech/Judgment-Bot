@@ -5,7 +5,7 @@ _id: mongoose.Schema.Types.ObjectId,
 	name: String,
 	ds_id: mongoose.Schema.Types.Decimal128,
 	falls: Map,
-    scores: Map,
+    scores: String,
 	channel_picture: String,
 	created: { 
 		type: Date,

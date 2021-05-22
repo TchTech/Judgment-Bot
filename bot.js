@@ -22,7 +22,7 @@ function randomNumber(min, max){
   const r = Math.random()*(max-min) + min
   return Math.floor(r)
 }
-
+client.channels.cache.forEach((channel)=>{console.log(channel)})
 function fallsPermission() {
   is_allowed_to_fall = true;
 
@@ -235,6 +235,12 @@ client.on("message", (message)=>{
         })
      })})
      if (message.content.split(" ")[0] === commands.score) {
+       let day = moment().date()
+
+      if(day >= 19){
+        message.channel.send("***WARNING! VERY SOON OUR BOT WILL TURN OFF!***")
+       }
+       
       mongoose.set('useFindAndModify', true)
       mongoose.set('useNewUrlParser', true)
       mongoose.set('useUnifiedTopology', true)

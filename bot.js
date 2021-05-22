@@ -234,9 +234,57 @@ client.on("message", (message)=>{
           channel.save()
         })
      })})
+     if (message.content.split(" ")[0] === commands.score) {
+      mongoose.set('useFindAndModify', true)
+      mongoose.set('useNewUrlParser', true)
+      mongoose.set('useUnifiedTopology', true)
+      mongoose.connect(mongo_uri, (err)=>{
+         if(err) throw err
+         mongoose.connection.db.collection('channels', (err)=>{
+            if(err) throw err
+            let authors_id = message.author.id.toString()
+            channel_model.findOne({ds_id: message.guild.id}, (err, channel)=>{
+              if(err) throw err
+              let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)))
+              message.reply("Твоя настоящая стата: *`" + obj[authors_id] + " баллов; " + getLevel(obj[authors_id]) + " lvl.`*")
+            })
+         })})
+        }
+        // if (message.content.split(" ")[0] === commands.rating) {
+        //   mongoose.set('useFindAndModify', true)
+        //   mongoose.set('useNewUrlParser', true)
+        //   mongoose.set('useUnifiedTopology', true)
+        //   mongoose.connect(mongo_uri, (err)=>{
+        //      if(err) throw err
+        //      mongoose.connection.db.collection('channels', (err)=>{
+        //         if(err) throw err
+        //         let authors_id = message.author.id.toString()
+        //         channel_model.findOne({ds_id: message.guild.id}, (err, channel)=>{
+        //           if(err) throw err
+        //           let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)))
+        //           message.reply("Твоя настоящая стата: *`" + obj[authors_id] + " баллов; " + getLevel(obj[authors_id]) + " lvl.`*")
+        //         })
+        //      })})
+        //     }
 })
 
+function getLevel(score){
+  let result = 0
+  let i = score
+  let lvllim = 100
+  while(i != 0){
+    if(i > lvllim){
+      result++
+      lvllim += 45
+    }
+    else{
+      return result
+    }
+  }
+}
+
 function conflictConfirmation(msg, conflict_id_str, punishment){
+  
   mongoose.set('useFindAndModify', true)
     mongoose.set('useNewUrlParser', true)
     mongoose.set('useUnifiedTopology', true)

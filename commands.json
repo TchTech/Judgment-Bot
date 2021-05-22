@@ -9,5 +9,7 @@
     "census": "b!census",
     "uregistration": "b!ureg",
     "cregistration": "b!creg",
-    "introducing": "b!hi"
+    "introducing": "b!hi",
+    "score": "b!score",
+    "rating":"b!rating"
 }

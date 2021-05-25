@@ -101,7 +101,7 @@ function createChannel(title, id, channel_pic){
 client.on("ready", () => {
   console.log("I am ready!");
   console.log(Discord.version);
-  bot.user.setActivity("Type b!enghelp for English help (Пропишите b!ruhelp для помощи на Русском)");
+  client.user.setActivity("Type b!enghelp for English help (Пропишите b!ruhelp для помощи на Русском)");
 });
 
 // Create an event listener for messages

@@ -104,6 +104,27 @@ client.on("ready", () => {
   client.user.setActivity("Type b!enghelp for English help (Пропишите b!ruhelp для помощи на Русском)");
 });
 
+client.on("message", (message) => {
+  if (message.content.split(" ")[0] === commands.cregistration){
+    
+    mongoose.connect(mongo_uri, (err)=>{
+      if(err) throw err
+      mongoose.connection.db.collection('channels', (err)=>{
+        if(err) throw err
+        channel_model.findOne({ds_id: message.guild.id}, (err, channel)=>{
+          if(err) throw err
+          if(channel == undefined){
+            createChannel(message.guild.name, message.guild.id, message.guild.iconURL())
+            message.reply("Channel was included to database successfully! Now you have many abilities like score-getting! Hooray!🎆\n*Канал был успешно добавлен в базу данных! Отныне у вас есть возможности вроде получения баллов! Урра!🎆*")
+          }else{
+            message.reply("Oops... You was already included to database.\n*Упс... Вы уже были добавлены в базу данных.*")
+          }
+        })
+      }) 
+    })
+  }
+})
+
 // Create an event listener for messages
 client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.repeat) {
@@ -216,6 +237,23 @@ client.on("message", (message) => {
 });
 
 client.on("message", (message)=>{
+  if(message.content.split(" ")[0] === commands.rating){
+  mongoose.set('useFindAndModify', true)
+  mongoose.set('useNewUrlParser', true)
+  mongoose.set('useUnifiedTopology', true)
+  mongoose.connect(mongo_uri, (err)=>{
+     if(err) throw err
+     mongoose.connection.db.collection('channels', (err)=>{
+        if(err) throw err
+        channel_model.findOne({ds_id: message.guild.id}, (err, channel)=>{
+          console.log(err, channel)
+          if(err) throw err
+          asyncRating(channel, message)
+     })})
+    })
+}})
+
+client.on("message", (message)=>{
   mongoose.set('useFindAndModify', true)
   mongoose.set('useNewUrlParser', true)
   mongoose.set('useUnifiedTopology', true)
@@ -274,6 +312,52 @@ client.on("message", (message)=>{
         //      })})
         //     }
 })
+
+function sendRatingEmbed(users, message) {
+  if(users === {}){
+    message.channel.send("*Упс... ни одного пользователя с баллами не найдено...*\nХе-хе-хе...")
+  }else{
+    let ratingEmbed = new Discord.MessageEmbed()
+    .setColor('#f78649')
+    .setTitle('***Рейтинг!***')
+    .setThumbnail(client.user.avatarURL())
+    .addFields(users)
+    .setTimestamp()
+    .setFooter('Judgment-bot by TchTech', 'https://cdn.discordapp.com/app-icons/799723410572836874/683e0c1d8a42a80bc4fd727cccafec85.png');
+    message.channel.send(ratingEmbed);
+}
+}
+
+async function asyncRating(channel, message) {
+  let users = []
+  let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)));
+  //if(Object.keys(obj).includes(authors_id) === false){console.log("no user", Object.keys(obj))//channel.scores.set(authors_id) = Math.random() + 9obj[authors_id] += Math.random() + 9;Object.assign(obj, {[authors_id]: 0})obj[authors_id] += 9 + randomNumber(0, 4)}else{console.log("all ok", Object.values(obj))//channel.scores.set(authors_id) = channel.scores.get(authors_id) + Math.random() + 9}
+  //client.users.cache.find(user => user.id === key) message.guild.members.cache.get(key).user.username
+  let sortable = [];
+  for (let user in obj) {
+    sortable.push([user, obj[user]]);
+  }
+
+  sortable.sort(function (a, b) {
+    return b[1] - a[1];
+  });
+  console.log(sortable);
+  let top_place = 1;
+  sortable.forEach((element, index) => {
+    if (element[0] != 799723410572836874) {
+      message.guild.members.fetch(element[0]).then(member => {
+        users.push({ name: top_place + "." + member.user.username + ":", value: (obj[element[0]] || 0) + " Баллов;" });
+        top_place++;
+        if(index + 1 == sortable.length){
+          sendRatingEmbed(users, message);
+        }
+      });
+    }
+  });
+  console.log(message.guild.members.cache);
+  
+  //return users
+}
 
 function getLevel(score){
   let result = 0
@@ -442,26 +526,6 @@ client.on("message", (message) => {
   }
 })
 
-client.on("message", (message) => {
-  if (message.content.split(" ")[0] === commands.cregistration){
-    
-    mongoose.connect(mongo_uri, (err)=>{
-      if(err) throw err
-      mongoose.connection.db.collection('channels', (err)=>{
-        if(err) throw err
-        channel_model.findOne({ds_id: message.guild.id}, (err, channel)=>{
-          if(err) throw err
-          if(channel == undefined){
-            createChannel(message.guild.name, message.guild.id, message.guild.iconURL())
-            message.reply("Channel was included to database successfully! Now you have many abilities like score-getting! Hooray!🎆\n*Канал был успешно добавлен в базу данных! Отныне у вас есть возможности вроде получения баллов! Урра!🎆*")
-          }else{
-            message.reply("Oops... You was already included to database.\n*Упс... Вы уже были добавлены в базу данных.*")
-          }
-        })
-      }) 
-    })
-  }
-})
 
 client.on("message", (message) => {
   if (message.content.split(" ")[0] === commands.introducing){

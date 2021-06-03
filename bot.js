@@ -41,10 +41,11 @@ client.on("guildMemberAdd", (member) => {
 });
 
 client.on("message", (message) => {
-  if (message.channel.type === "dm")
+  if (message.channel.type === "dm"){
     message.reply(
       "Упсс... На данный момент вы не можете общаться со мной лично... Для этого есть сервера! Look at {official-j-bot-site-link-soon}"
     );
+  }
   else {
     if (message.content.split(" ")[0] === commands.cregistration) {
       mongoose.connect(mongo_uri, (err) => {

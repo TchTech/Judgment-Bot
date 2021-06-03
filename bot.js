@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const client = new Discord.Client({
-  ws: { intents: ["GUILDS", "GUILD_MEMBERS"] },
+  // ws: { intents: ["GUILDS", "GUILD_MEMBERS"] },
 });
 const configfile = require("./data/config.json");
 const prefix = configfile.prefix;
@@ -41,7 +41,7 @@ client.on("guildMemberAdd", (member) => {
 });
 
 client.on("message", (message) => {
-  if (message.channel.type === "dm"){
+  if (message.channel.type === "dm" && message.author.id != 799723410572836874){
     message.reply(
       "Упсс... На данный момент вы не можете общаться со мной лично... Для этого есть сервера! Look at {official-j-bot-site-link-soon}"
     );
@@ -71,7 +71,7 @@ client.on("message", (message) => {
           });
         });
       });
-    } else if (
+    } if (
       !message.author.bot &&
       client.guilds.cache.get(message.guild.id).member(message.author.id)
     ) {

@@ -20,6 +20,10 @@ var conflict_model = require("./conflict_model");
 const moment = require("moment");
 const channel_model = require("./channel_model");
 
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
 client.on("ready", () => {
   console.log("I am ready!");
   console.log(Discord.version);
@@ -29,10 +33,8 @@ client.on("ready", () => {
 });
 
 client.on("guildMemberAdd", (member) => {
-  if (member.guild.id == 804772492978946089) {
-    let role = member.guild.roles.cache.find(
-      (role) => role.id === 847184804377526332
-    );
+  if (member.guild.id == '804772492978946089') {
+    let role = member.guild.roles.cache.find(role=>role.id == '847184804377526332');
     member.roles.add(role);
     member.send(
       "***Хе-хе-хе...***\nТы сделал хороший выбор, друг! Наслаждайся анонсами бота, обращайся в поддержку и следи за новостями IT и GAME индустрии.\nВ общем, рай на земле, не так ли?"
@@ -188,6 +190,13 @@ client.on("message", (message) => {
           });
         });
         break;
+      case commands.birthday:
+        if(message.mentions.members.first() !== undefined){
+        message.channel.send('Внимание, @everyone ! Сегодня день рождения у пользователя `' + message.mentions.members.first().user.username +'` ! Поздравляем его с этим замечательным днём и желаем всего исключительно наилучшего!\n***УРА!!***').then(msg=>sleep(5000).then(msg.reactions.cache.get('484535447171760141') .then(msg=>msg.react('🎆'))))
+        }else{
+          message.channel.send('Упс... Вы некорректно использовали команду...')
+        }
+        break; 
       case commands.introducing:
         message.reply(
           "Настоящее сообщение с 09.04.21 (0.5):\n@everyone Мы всё еще предлагаем вам внести свои данные в базу данных для получения возможности конфликтов при помощи `b!reg`.\n И да... насчет конфликтов... на даный момент команда `b!conflict <нарушитель> <наказание (fall-kick-ban)> <причина>` ЗАРАБОТАЛА!!! Тестируйте её по поооооолной! Конец сообщения."

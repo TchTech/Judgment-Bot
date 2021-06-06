@@ -5,5 +5,5 @@
    "guildId":  "799721866884546561",
    "channelId":  "799721866884546565",
    "botPrefix":  "b!",
-   "testMatches":  ["./test/**"]
+   "testMatches":  ["./test/test.js"]
 }

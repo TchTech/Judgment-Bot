@@ -11,5 +11,6 @@
     "cregistration": "b!creg",
     "introducing": "b!hi",
     "score": "b!score",
+    "birthday": "b!birthday",
     "rating":"b!rating"
 }

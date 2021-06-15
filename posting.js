@@ -2,8 +2,6 @@ const Discord = require("discord.js");
 const client = new Discord.Client();
 const configfile = require("./data/config.json");
 const token = configfile.token;
-const moment = require("moment");
-const { time } = require("console");
 const readline = require('readline').createInterface({
 	input: process.stdin,
 	output: process.stdout
@@ -19,11 +17,9 @@ const readline = require('readline').createInterface({
 	])
 	.setTimestamp()
 	.setFooter('Judgment-bot by TchTech', 'https://cdn.discordapp.com/app-icons/799723410572836874/683e0c1d8a42a80bc4fd727cccafec85.png');
-	client.channels.cache.get('846821447585234964').send(newsEmbed).then((m) => {
-		m.react("👍");
-		m.react("👎");
-	})
+	client.channels.fetch('846821447585234964', false).then((channel)=>{channel.send(newsEmbed)
+		.then((m) => {m.react("👍");m.react("👎");})//Сезонизация. Соревнования серверов. Левел ап ролей на оф. сервере.
 	readline.close();
 	//process.exit(0)
-  });
+  })});
 client.login(token);

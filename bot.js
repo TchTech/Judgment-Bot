@@ -21,8 +21,23 @@ const moment = require("moment");
 const channel_model = require("./channel_model");
 
 const sleep = (milliseconds) => {
-  return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+};
+
+
+/*TODO: B!OPTION;
+        HELP FIX;
+        FASTER RATING;
+        LOGS;
+        TRY-CATCH;
+        SITE;
+        SEASONS;
+        GAME-ROLES;
+        LANGUAGE MODES;
+        README.MD;
+        ~NOTIFIER;
+        */
+
 
 client.on("ready", () => {
   console.log("I am ready!");
@@ -33,8 +48,10 @@ client.on("ready", () => {
 });
 
 client.on("guildMemberAdd", (member) => {
-  if (member.guild.id == '804772492978946089') {
-    let role = member.guild.roles.cache.find(role=>role.id == '847184804377526332');
+  if (member.guild.id == "804772492978946089") {
+    let role = member.guild.roles.cache.find(
+      (role) => role.id == "847184804377526332"
+    );
     member.roles.add(role);
     member.send(
       "***Хе-хе-хе...***\nТы сделал хороший выбор, друг! Наслаждайся анонсами бота, обращайся в поддержку и следи за новостями IT и GAME индустрии.\nВ общем, рай на земле, не так ли?"
@@ -43,12 +60,14 @@ client.on("guildMemberAdd", (member) => {
 });
 
 client.on("message", (message) => {
-  if (message.channel.type === "dm" && message.author.id != 799723410572836874){
+  if (
+    message.channel.type === "dm" &&
+    message.author.id != 799723410572836874
+  ) {
     message.reply(
       "Упсс... На данный момент вы не можете общаться со мной лично... Для этого есть сервера! Look at {official-j-bot-site-link-soon}"
     );
-  }
-  else {
+  } else {
     if (message.content.split(" ")[0] === commands.cregistration) {
       mongoose.connect(mongo_uri, (err) => {
         if (err) throw err;
@@ -73,7 +92,8 @@ client.on("message", (message) => {
           });
         });
       });
-    } if (
+    }
+    if (
       !message.author.bot &&
       client.guilds.cache.get(message.guild.id).member(message.author.id)
     ) {
@@ -191,12 +211,24 @@ client.on("message", (message) => {
         });
         break;
       case commands.birthday:
-        if(message.mentions.members.first() !== undefined){
-        message.channel.send('Внимание, @everyone ! Сегодня день рождения у пользователя `' + message.mentions.members.first().user.username +'` ! Поздравляем его с этим замечательным днём и желаем всего исключительно наилучшего!\n***УРА!!***').then(msg=>sleep(5000).then(msg.reactions.cache.get('484535447171760141') .then(msg=>msg.react('🎆'))))
-        }else{
-          message.channel.send('Упс... Вы некорректно использовали команду...')
+        if (message.mentions.members.first() !== undefined) {
+          message.channel
+            .send(
+              "Внимание, @everyone ! Сегодня день рождения у пользователя `" +
+                message.mentions.members.first().user.username +
+                "` ! Поздравляем его с этим замечательным днём и желаем всего исключительно наилучшего!\n***УРА!!***"
+            )
+            .then((msg) =>
+              sleep(5000).then(
+                msg.reactions.cache
+                  .get("484535447171760141")
+                  .then((msg) => msg.react("🎆"))
+              )
+            );
+        } else {
+          message.channel.send("Упс... Вы некорректно использовали команду...");
         }
-        break; 
+        break;
       case commands.introducing:
         message.reply(
           "Настоящее сообщение с 09.04.21 (0.5):\n@everyone Мы всё еще предлагаем вам внести свои данные в базу данных для получения возможности конфликтов при помощи `b!reg`.\n И да... насчет конфликтов... на даный момент команда `b!conflict <нарушитель> <наказание (fall-kick-ban)> <причина>` ЗАРАБОТАЛА!!! Тестируйте её по поооооолной! Конец сообщения."
@@ -344,7 +376,7 @@ client.on("message", (message) => {
                   m.react("👎");
                 });
           is_allowed_to_census = false;
-          setTimeout(censusPermission, 360000);
+          setTimeout(censusPermission, 900000);
         }
         break;
       case commands.ru_help:
@@ -366,9 +398,9 @@ client.on("message", (message) => {
               inline: true,
             },
             {
-              name: "`b!fall <linked-users-name> <case>`",
+              name: "`b!census <question>`",
               value:
-                "***ДАННАЯ ФУНКЦИЯ НЕ РАБОТАЕТ НА ДАННЫЙ МОМЕНТ!*** Выдает предупреждение преступнику. За 3 фолла - кик!",
+                "Удобная функция, которая позволяет сделать опрос вида *ЗА/ПРОТИВ*. Если `question` не указан, будет опрос об удобстве сервера. Можно сделать лишь раз в 15 мин.",
               inline: true,
             }
           )
@@ -419,6 +451,15 @@ function sendRatingEmbed(users, message) {
   }
 }
 
+function compareSecondColumn(a, b) {
+  if (b[1] === a[1]) {
+      return 0;
+  }
+  else {
+      return (b[1] < a[1]) ? -1 : 1;
+  }
+}
+
 async function asyncRating(channel, message) {
   let users = [];
   let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)));
@@ -429,9 +470,7 @@ async function asyncRating(channel, message) {
     sortable.push([user, obj[user]]);
   }
 
-  sortable.sort(function (a, b) {
-    return b[1] - a[1];
-  });
+  sortable.sort(compareSecondColumn(a, b));
   console.log(sortable);
   let top_place = 1;
   sortable.forEach((element, index) => {

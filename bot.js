@@ -1,7 +1,8 @@
 const Discord = require("discord.js");
 const client = new Discord.Client({
-  // ws: { intents: ["GUILDS", "GUILD_MEMBERS"] },
+//  ws: { intents: "GUILD_MEMBERS" },
 });
+var cron = require('node-cron');
 const configfile = require("./data/config.json");
 const prefix = configfile.prefix;
 const token = configfile.token;
@@ -20,9 +21,13 @@ var conflict_model = require("./conflict_model");
 const moment = require("moment");
 const channel_model = require("./channel_model");
 
+
 const sleep = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
+
+
+// MAIN TODO: SEASONS AND THEN DB USERS ADD; SAVE ALL ADDED IDS IN ARRAY IN READY; MAKE FEWER USER PRINT IN RATING;
 
 
 /*TODO: B!OPTION;
@@ -35,6 +40,8 @@ const sleep = (milliseconds) => {
         GAME-ROLES;
         LANGUAGE MODES;
         README.MD;
+        TYPING;
+        TESTS;
         ~NOTIFIER;
         */
 
@@ -125,7 +132,7 @@ client.on("message", (message) => {
         });
       });
     } else {
-      message.react("🚫");
+      if(message.author.id !== '799723410572836874'){message.react("🚫")}
     }
     switch (message.content.split(" ")[0]) {
       case commands.score:
@@ -429,6 +436,18 @@ client.on("message", (message) => {
   }
 });
 
+cron.schedule('0 0 1 * *', () => {
+  mongoose.set("useFindAndModify", true);
+          mongoose.set("useNewUrlParser", true);
+          mongoose.set("useUnifiedTopology", true);
+          mongoose.connect(mongo_uri, (err, client) => {
+            if (err) throw err;
+            mongoose.connection.db.collection("channels", (err) => {
+
+            })
+          })
+})
+
 // FUNCTIONS --------------------------------------------------------------------
 
 function sendRatingEmbed(users, message) {
@@ -460,7 +479,7 @@ function compareSecondColumn(a, b) {
   }
 }
 
-async function asyncRating(channel, message) {
+function asyncRating(channel, message) {
   let users = [];
   let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)));
   //if(Object.keys(obj).includes(authors_id) === false){console.log("no user", Object.keys(obj))//channel.scores.set(authors_id) = Math.random() + 9obj[authors_id] += Math.random() + 9;Object.assign(obj, {[authors_id]: 0})obj[authors_id] += 9 + randomNumber(0, 4)}else{console.log("all ok", Object.values(obj))//channel.scores.set(authors_id) = channel.scores.get(authors_id) + Math.random() + 9}
@@ -470,12 +489,15 @@ async function asyncRating(channel, message) {
     sortable.push([user, obj[user]]);
   }
 
-  sortable.sort(compareSecondColumn(a, b));
+  sortable = sortable.sort((a,b)=>compareSecondColumn(a, b));
   console.log(sortable);
+  console.log(client.users.cache)
   let top_place = 1;
   sortable.forEach((element, index) => {
-    if (element[0] != 799723410572836874) {
-      message.guild.members.fetch(element[0]).then((member) => {
+    console.log(element[0])
+    if (element[0] != '799723410572836874') {
+      message.guild.members.fetch(element[0], true).then((member) => {
+        console.log(index)
         users.push({
           name: top_place + "." + member.user.username + ":",
           value: (obj[element[0]] || 0) + " Баллов;",

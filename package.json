@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "main": "bot.js",
   "scripts": {
-    "start": "node bot.js"
+    "start": "node bot.js",
+    "test": "jest"
   },
   "dependencies": {
     "discord.js": "12.5.1",
@@ -17,6 +18,7 @@
     "sort-keys": "^5.0.0"
   },
   "devDependencies": {
-    "corde": "^4.0.5"
+    "corde": "^4.0.5",
+    "jest": "^27.0.5"
   }
 }

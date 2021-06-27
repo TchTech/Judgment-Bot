@@ -1,7 +1,6 @@
 {
     "repeat": "b!repeat",
-    "shop": "b!shop",
-    "en-help": "b!enghelp",
+    "en_help": "b!enghelp",
     "conflict": "b!conflict",
     "help": "b!help",
     "ru_help": "b!ruhelp",

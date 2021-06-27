@@ -15,12 +15,12 @@ const conflicts = {};
 var is_allowed_to_census = true;
 var mongoose = require("mongoose");
 var user_model = require("./user_model");
-const mongo_uri =
-  "mongodb+srv://admin:kira2007@bot.ljnsg.mongodb.net/judgment-bot-discord";
+const mongo_uri = configfile.mongo_uri
 var conflict_model = require("./conflict_model");
 const moment = require("moment");
 const channel_model = require("./channel_model");
-
+var added_users_ids = [];
+const getAddedUsers = require("./src/getAddedUsers").getAddedUsers
 
 const sleep = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -32,6 +32,7 @@ const sleep = (milliseconds) => {
 
 /*TODO: B!OPTION;
         HELP FIX;
+        FALLS REFORMATION;
         FASTER RATING;
         LOGS;
         TRY-CATCH;
@@ -52,6 +53,7 @@ client.on("ready", () => {
   client.user.setActivity(
     "Type b!enghelp for English help (Пропишите b!ruhelp для помощи на Русском)"
   );
+  getAddedUsers().then((users)=>{added_users_ids = users;});
 });
 
 client.on("guildMemberAdd", (member) => {
@@ -69,7 +71,7 @@ client.on("guildMemberAdd", (member) => {
 client.on("message", (message) => {
   if (
     message.channel.type === "dm" &&
-    message.author.id != 799723410572836874
+    message.author.id != '799723410572836874'
   ) {
     message.reply(
       "Упсс... На данный момент вы не можете общаться со мной лично... Для этого есть сервера! Look at {official-j-bot-site-link-soon}"
@@ -104,33 +106,8 @@ client.on("message", (message) => {
       !message.author.bot &&
       client.guilds.cache.get(message.guild.id).member(message.author.id)
     ) {
-      mongoose.set("useFindAndModify", true);
-      mongoose.set("useNewUrlParser", true);
-      mongoose.set("useUnifiedTopology", true);
-      mongoose.connect(mongo_uri, (err) => {
-        if (err) throw err;
-        mongoose.connection.db.collection("channels", (err) => {
-          if (err) throw err;
-          let authors_id = message.author.id.toString();
-          channel_model.findOne({ ds_id: message.guild.id }, (err, channel) => {
-            console.log(err, channel);
-            if (err) throw err;
-            console.log("SSGG");
-            let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)));
-            let day = moment().date();
-            let score;
-            if (day == 1 || day == 10 || day == 20 || day == 30) {
-              score = (obj[authors_id] || 0) + 16 + randomNumber(0, 4);
-              message.react("🎈");
-            } else {
-              score = (obj[authors_id] || 0) + 9 + randomNumber(0, 4);
-            }
-            obj[authors_id] = score;
-            channel.scores = JSON.stringify(obj);
-            channel.save();
-          });
-        });
-      });
+        checkUserInDB(message);
+        giveScores(message);
     } else {
       if(message.author.id !== '799723410572836874'){message.react("🚫")}
     }
@@ -394,7 +371,7 @@ client.on("message", (message) => {
           .setDescription("Последнее сообщение (07.05.2021)")
           .addFields(
             {
-              name: "`b!help`",
+              name: "`b!enghelp`",
               value: "тоже самое что и `b!ruhelp`, но на английском языке!",
             },
             { name: "`b!repeat <message>`", value: "Повторение `message`." },
@@ -408,6 +385,24 @@ client.on("message", (message) => {
               name: "`b!census <question>`",
               value:
                 "Удобная функция, которая позволяет сделать опрос вида *ЗА/ПРОТИВ*. Если `question` не указан, будет опрос об удобстве сервера. Можно сделать лишь раз в 15 мин.",
+              inline: true,
+            },
+            {
+              name: "`b!score`",
+              value:
+                "Позволяет узнать свои баллы и уровень на сервере.",
+              inline: true,
+            },
+            {
+              name: "`b!rating`",
+              value:
+                "Позволяет узнать баллы лучших мемберов.",
+              inline: true,
+            },
+            {
+              name: "`b!birthday <linked-user>`",
+              value:
+                "Если вы использовали эту комманду, бот поздравит `<linked-user>` с днем рождения!.",
               inline: true,
             }
           )
@@ -429,7 +424,7 @@ client.on("message", (message) => {
           message.author.username + " said: " + textCommand.join(" ")
         );
         break;
-      case commands["en-help"]:
+      case commands.en_help:
         message.reply(help_messages["eng-help-msg"]);
         break;
     }
@@ -443,12 +438,72 @@ cron.schedule('0 0 1 * *', () => {
           mongoose.connect(mongo_uri, (err, client) => {
             if (err) throw err;
             mongoose.connection.db.collection("channels", (err) => {
-
+              
             })
           })
 })
+async function giveScores(message) {
+  mongoose.set("useFindAndModify", true);
+      mongoose.set("useNewUrlParser", true);
+      mongoose.set("useUnifiedTopology", true);
+  mongoose.connect(mongo_uri, (err) => {
+    if (err) throw err;
+  mongoose.connection.db.collection("channels", (err) => {
+    if (err)
+      throw err;
+    let authors_id = message.author.id.toString();
+    channel_model.findOne({ ds_id: message.guild.id }, (err, channel) => {
+      console.log(err, channel);
+      if (err)
+        throw err;
+      console.log("SSGG");
+      let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)));
+      let day = moment().date();
+      let score;
+      if (day == 1 || day == 10 || day == 20 || day == 30) {
+        score = (obj[authors_id] || 0) + 16 + randomNumber(0, 4);
+        message.react("🎈");
+      } else {
+        score = (obj[authors_id] || 0) + 9 + randomNumber(0, 4);
+      }
+      obj[authors_id] = score;
+      channel.scores = JSON.stringify(obj);
+      channel.save();
+    });
+  })
+  });
+}
 
 // FUNCTIONS --------------------------------------------------------------------
+
+async function checkUserInDB(message) {
+  if (!added_users_ids.includes(message.author.id)) {
+    createUser(message.author.username, message.author.id, 0, [], message.author.avatarURL());
+    added_users_ids.push(message.author.id);
+  }
+}
+
+// function getAddedUsers() {
+//   let added_users_ids = []
+//   mongoose.connect(mongo_uri, (err) => {
+//     if (err)
+//       throw err;
+//     mongoose.connection.db.collection("users", (err) => {
+//       if (err)
+//         throw err;
+//       user_model.find({}, (err, users) => {
+//         if (err)
+//           throw err;
+//         users.forEach((user, index, array) => {
+//           added_users_ids.push(user.ds_id);
+//           if(index + 1 === array.length){
+//             return added_users_ids
+//           }
+//         });
+//       });
+//     });
+//   });
+// }
 
 function sendRatingEmbed(users, message) {
   if (users === {}) {
@@ -600,6 +655,9 @@ function conflictConfirmation(msg, conflict_id_str, punishment) {
     );
   }
 
+class Process{
+
+}
   function fallProcess(positive_votes, negative_votes) {
     conflict_model.findByIdAndUpdate(
       conflict_id_str,
@@ -778,7 +836,6 @@ function createUser(
   id,
   falls,
   conflicts,
-  servers_member,
   profile_pic_link
 ) {
   mongoose.set("useFindAndModify", true);
@@ -796,7 +853,6 @@ function createUser(
         ds_id: id,
         falls: falls,
         conficts_member: conflicts,
-        connected_servers: servers_member,
         profile_picture: profile_pic_link,
       });
 

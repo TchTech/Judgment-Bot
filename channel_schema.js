@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 var channelSchema = mongoose.Schema({
 _id: mongoose.Schema.Types.ObjectId,
 	name: String,
-	ds_id: mongoose.Schema.Types.Decimal128,
+	ds_id: String,
 	falls: Map,
     scores: String,
 	channel_picture: String,

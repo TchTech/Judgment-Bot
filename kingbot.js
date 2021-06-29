@@ -12,7 +12,7 @@ client.on("message", (msg)=>{
     console.log(msg.guild.roles)
     switch(msg.content.split(" ")[0]){
         case "b!games":
-            msg.reply("Спасибо что спросили! На данный моменты доступны 7 ролей:\n`b!minecraft`: **Minecraft-Gamer**;\n`b!terraria`: **Terraria-Gamer**;\n`b!nintendo`: **NINTENDO-Gamer**;\n`b!gta`: **GTA-Gamer**;\n`b!wot`: **WOT-Gamer**;\n`b!csgo`: **Counter-Strike-Gamer**;\n`b!pubg`: **PUBG-Gamer**;\n")
+            msg.reply("Спасибо что спросили! На данный момент доступны 7 ролей:\n`b!minecraft`: **Minecraft-Gamer**;\n`b!terraria`: **Terraria-Gamer**;\n`b!nintendo`: **NINTENDO-Gamer**;\n`b!gta`: **GTA-Gamer**;\n`b!wot`: **WOT-Gamer**;\n`b!csgo`: **Counter-Strike-Gamer**;\n`b!pubg`: **PUBG-Gamer**;\n")
             break
         case "b!minecraft":
             let minecraft_role = msg.guild.roles.cache.get("858709693088923658")

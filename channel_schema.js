@@ -6,6 +6,7 @@ _id: mongoose.Schema.Types.ObjectId,
 	ds_id: String,
 	falls: Map,
     scores: String,
+	last_season: Number,
 	channel_picture: String,
 	created: { 
 		type: Date,

@@ -34,10 +34,12 @@ const sleep = (milliseconds) => {
         HELP FIX;
         FALLS REFORMATION;
         FASTER RATING;
+        ONLY ONE DB CONNECT;
+        CHANNEL ADDING LINKE USRS;
         LOGS;
         TRY-CATCH;
         SITE;
-        SEASONS;
+        +SEASONS;
         GAME-ROLES;
         LANGUAGE MODES;
         README.MD;
@@ -78,29 +80,7 @@ client.on("message", (message) => {
     );
   } else {
     if (message.content.split(" ")[0] === commands.cregistration) {
-      mongoose.connect(mongo_uri, (err) => {
-        if (err) throw err;
-        mongoose.connection.db.collection("channels", (err) => {
-          if (err) throw err;
-          channel_model.findOne({ ds_id: message.guild.id }, (err, channel) => {
-            if (err) throw err;
-            if (channel == undefined) {
-              createChannel(
-                message.guild.name,
-                message.guild.id,
-                message.guild.iconURL()
-              );
-              message.reply(
-                "Channel was included to database successfully! Now you have many abilities like score-getting! Hooray!🎆\n*Канал был успешно добавлен в базу данных! Отныне у вас есть возможности вроде получения баллов! Урра!🎆*"
-              );
-            } else {
-              message.reply(
-                "Oops... You was already included to database.\n*Упс... Вы уже были добавлены в базу данных.*"
-              );
-            }
-          });
-        });
-      });
+      channelRegistration(message);
     }
     if (
       !message.author.bot &&
@@ -108,44 +88,12 @@ client.on("message", (message) => {
     ) {
         checkUserInDB(message);
         giveScores(message);
-    } else {
-      if(message.author.id !== '799723410572836874'){message.react("🚫")}
+    } else if(message.author.id !== '799723410572836874'){
+      message.react("🚫")
     }
     switch (message.content.split(" ")[0]) {
       case commands.score:
-        let day = moment().date();
-        if (day >= 19) {
-          message.author.bot;
-          message.channel.send(
-            "***WARNING! VERY SOON OUR BOT WILL TURN OFF!***"
-          );
-        }
-        mongoose.set("useFindAndModify", true);
-        mongoose.set("useNewUrlParser", true);
-        mongoose.set("useUnifiedTopology", true);
-        mongoose.connect(mongo_uri, (err) => {
-          if (err) throw err;
-          mongoose.connection.db.collection("channels", (err) => {
-            if (err) throw err;
-            let authors_id = message.author.id.toString();
-            channel_model.findOne(
-              { ds_id: message.guild.id },
-              (err, channel) => {
-                if (err) throw err;
-                let obj = JSON.parse(
-                  JSON.parse(JSON.stringify(channel.scores))
-                );
-                message.reply(
-                  "Твоя настоящая стата: *`" +
-                    obj[authors_id] +
-                    " баллов; " +
-                    getLevel(obj[authors_id]) +
-                    " lvl.`*"
-                );
-              }
-            );
-          });
-        });
+        checkScore(message);
         break;
       case commands.rating:
         mongoose.set("useFindAndModify", true);
@@ -167,51 +115,13 @@ client.on("message", (message) => {
         });
         break;
       case commands.uregistration:
-        mongoose.connect(mongo_uri, (err) => {
-          if (err) throw err;
-          mongoose.connection.db.collection("users", (err) => {
-            if (err) throw err;
-            user_model.findOne({ ds_id: message.author.id }, (err, user) => {
-              if (err) throw err;
-              if (user == undefined) {
-                createUser(
-                  message.author.username,
-                  message.author.id,
-                  0,
-                  [0],
-                  [message.guild.id],
-                  message.author.avatarURL()
-                );
-                message.reply(
-                  "You was included to database successfully! Now you have ability for conflicts! Hooray!🎆\n*Вы были успешно добавлены в базу данных! Отныне у вас есть возможность конфликтовать! Урра!🎆*"
-                );
-              } else {
-                message.reply(
-                  "Oops... You was already included to database. You've already got conflict ability.\n*Упс... Вы уже были добавлены в базу данных. Вы уже получили возможность конфликтовать.*"
-                );
-              }
-            });
-          });
-        });
+        userRegistration(message);
         break;
+      // case "b!supertest":
+      //   updateGuilds()
+      //   break;
       case commands.birthday:
-        if (message.mentions.members.first() !== undefined) {
-          message.channel
-            .send(
-              "Внимание, @everyone ! Сегодня день рождения у пользователя `" +
-                message.mentions.members.first().user.username +
-                "` ! Поздравляем его с этим замечательным днём и желаем всего исключительно наилучшего!\n***УРА!!***"
-            )
-            .then((msg) =>
-              sleep(5000).then(
-                msg.reactions.cache
-                  .get("484535447171760141")
-                  .then((msg) => msg.react("🎆"))
-              )
-            );
-        } else {
-          message.channel.send("Упс... Вы некорректно использовали команду...");
-        }
+        sendBirthday(message);
         break;
       case commands.introducing:
         message.reply(
@@ -432,16 +342,176 @@ client.on("message", (message) => {
 });
 
 cron.schedule('0 0 1 * *', () => {
-  mongoose.set("useFindAndModify", true);
-          mongoose.set("useNewUrlParser", true);
-          mongoose.set("useUnifiedTopology", true);
-          mongoose.connect(mongo_uri, (err, client) => {
-            if (err) throw err;
-            mongoose.connection.db.collection("channels", (err) => {
-              
-            })
-          })
+  updateGuilds();
 })
+
+const reducer = (accumulator, currentValue) => accumulator + currentValue;
+
+async function updateGuilds() {
+  mongoose.set("useFindAndModify", true);
+  mongoose.set("useNewUrlParser", true);
+  mongoose.set("useUnifiedTopology", true);
+  mongoose.connect(mongo_uri, (err) => {
+    if (err) throw err;
+    mongoose.connection.db.collection("channels", (err) => {
+      if(err) throw err
+      channel_model.find({}).then((users) => {
+        client.guilds.fetch('799721866884546561', false).then((guild)=>{
+        let main_channel = guild.channels.cache.get('799721866884546565')
+        main_channel.send('***Йо-хо-хо!***\n**@everyone Это же конец сезона! Время представить вам итоги сезона!**\n\n***ИМЕЙТЕ ВВИДУ, ЧТО ВСЕ ВАШИ БАЛЛЫ БУДУТ СБРОШЕНЫ, НО ИСХОДЯ ИЗ ВСЕХ БАЛЛОВ СЕРВЕРА БУДЕТ ВЫСЧИТАН УРОВЕНЬ СЕРВЕРА ПО ЭТОЙ СХЕМЕ:\n\n1 lvl: до 625 общих баллов;\n2 lvl: 625-799 баллов;\n3 lvl: 800-999 баллов;\n4 lvl: 1000-1199 баллов;\n5 lvl: 1200-1499 баллов;\n6 lvl: 1500-1899 баллов;\n7 lvl: 1900-2399 баллов;\n8 lvl: 2400-2999 баллов;\n9 lvl: 3000-5000 баллов;\n10:crown: lvl: более 5000 баллов.***\n\n***УДАЧИ ВАМ В СЛЕДУЩЕМ СЕЗОНЕ!***')
+        users.forEach((channel, index, array) => {
+          //SPLIT DISCT TO TWO ARRS AND SUM OF SECOND ARR IS ALL SCORE
+            client.guilds.fetch(channel.ds_id, false).then((ds_channel) => {
+              let sub_channel = channel
+              channel.remove()
+              console.log(channel.scores)
+              createChannel(ds_channel.name, ds_channel.id, ds_channel.iconURL(), countSeasonLevel(scoresSum(sub_channel)));
+              main_channel.send("`" + ds_channel.name + ": " + countSeasonLevel(scoresSum(sub_channel)) + ' lvl`')
+        })
+          });
+        });
+      });
+    });
+  });
+}
+
+function scoresSum(channel) {
+  if(channel.scores === "{}") return 0 
+  else return Object.values(JSON.parse(channel.scores)).reduce(reducer);
+}
+
+function countSeasonLevel(score){
+  if(score < 625) return 1;
+  else if(score >= 625 && score < 800) return 2;
+  else if(score >= 800 && score < 1000) return 3;
+  else if(score >= 1000 && score < 1200) return 4;
+  else if(score >= 1200 && score < 1500) return 5;
+  else if(score >= 1500 && score < 1900) return 6;
+  else if(score >= 1900 && score < 2400) return 7;
+  else if(score >= 2400 && score < 3000) return 8;
+  else if(score >= 3000 && score < 5000) return 9;
+  else if(score >= 5000) return 10;
+}
+
+async function sendBirthday(message) {
+  if (message.mentions.members.first() !== undefined) {
+    message.channel
+      .send(
+        "Внимание, @everyone ! Сегодня день рождения у пользователя `" +
+        message.mentions.members.first().user.username +
+        "` ! Поздравляем его с этим замечательным днём и желаем всего исключительно наилучшего!\n***УРА!!***"
+      )
+      .then((msg) => sleep(5000).then(
+        msg.reactions.cache
+          .get("484535447171760141")
+          .then((msg) => msg.react("🎆"))
+      )
+      );
+  } else {
+    message.channel.send("Упс... Вы некорректно использовали команду...");
+  }
+}
+
+async function userRegistration(message) {
+  mongoose.connect(mongo_uri, (err) => {
+    if (err)
+      throw err;
+    mongoose.connection.db.collection("users", (err) => {
+      if (err)
+        throw err;
+      user_model.findOne({ ds_id: message.author.id }, (err, user) => {
+        if (err)
+          throw err;
+        if (user == undefined) {
+          createUser(
+            message.author.username,
+            message.author.id,
+            0,
+            [0],
+            [message.guild.id],
+            message.author.avatarURL()
+          );
+          message.reply(
+            "You was included to database successfully! Now you have ability for conflicts! Hooray!🎆\n*Вы были успешно добавлены в базу данных! Отныне у вас есть возможность конфликтовать! Урра!🎆*"
+          );
+        } else {
+          message.reply(
+            "Oops... You was already included to database. You've already got conflict ability.\n*Упс... Вы уже были добавлены в базу данных. Вы уже получили возможность конфликтовать.*"
+          );
+        }
+      });
+    });
+  });
+}
+
+async function checkScore(message) {
+  let day = moment().date();
+  if (day >= 19) {
+    message.author.bot;
+    message.channel.send(
+      "***WARNING! VERY SOON OUR BOT WILL TURN OFF!***"
+    );
+  }
+  mongoose.set("useFindAndModify", true);
+  mongoose.set("useNewUrlParser", true);
+  mongoose.set("useUnifiedTopology", true);
+  await mongoose.connect(mongo_uri, (err) => {
+    if (err)
+      throw err;
+    mongoose.connection.db.collection("channels", (err) => {
+      if (err)
+        throw err;
+      let authors_id = message.author.id.toString();
+      channel_model.findOne(
+        { ds_id: message.guild.id },
+        (err, channel) => {
+          if (err)
+            throw err;
+          let obj = JSON.parse(
+            JSON.parse(JSON.stringify(channel.scores))
+          );
+          message.reply(
+            "Твоя настоящая стата: *`" +
+            obj[authors_id] +
+            " баллов; " +
+            getLevel(obj[authors_id]) +
+            " lvl.`*"
+          );
+        }
+      );
+    });
+  });
+}
+
+async function channelRegistration(message) {
+  mongoose.connect(mongo_uri, (err) => {
+    if (err)
+      throw err;
+    mongoose.connection.db.collection("channels", (err) => {
+      if (err)
+        throw err;
+      channel_model.findOne({ ds_id: message.guild.id }, (err, channel) => {
+        if (err)
+          throw err;
+        if (channel == undefined) {
+          createChannel(
+            message.guild.name,
+            message.guild.id,
+            message.guild.iconURL()
+          );
+          message.reply(
+            "Channel was included to database successfully! Now you have many abilities like score-getting! Hooray!🎆\n*Канал был успешно добавлен в базу данных! Отныне у вас есть возможности вроде получения баллов! Урра!🎆*"
+          );
+        } else {
+          message.reply(
+            "Oops... You was already included to database.\n*Упс... Вы уже были добавлены в базу данных.*"
+          );
+        }
+      });
+    });
+  });
+}
+
 async function giveScores(message) {
   mongoose.set("useFindAndModify", true);
       mongoose.set("useNewUrlParser", true);
@@ -457,14 +527,14 @@ async function giveScores(message) {
       if (err)
         throw err;
       console.log("SSGG");
-      let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)));
+      let obj = JSON.parse(channel.scores);
       let day = moment().date();
       let score;
       if (day == 1 || day == 10 || day == 20 || day == 30) {
-        score = (obj[authors_id] || 0) + 16 + randomNumber(0, 4);
+        score = (obj[authors_id] || 0) + 6 + randomNumber(0, 4);
         message.react("🎈");
       } else {
-        score = (obj[authors_id] || 0) + 9 + randomNumber(0, 4);
+        score = (obj[authors_id] || 0) + 2 + randomNumber(0, 4);
       }
       obj[authors_id] = score;
       channel.scores = JSON.stringify(obj);
@@ -866,7 +936,8 @@ function createUser(
   });
 }
 
-function createChannel(title, id, channel_pic) {
+async function createChannel(title, id, channel_pic, last_season) {
+  last_season = last_season || 0
   mongoose.set("useFindAndModify", true);
   mongoose.set("useNewUrlParser", true);
   mongoose.set("useUnifiedTopology", true);
@@ -882,6 +953,7 @@ function createChannel(title, id, channel_pic) {
         ds_id: id,
         falls: {},
         scores: "{}",
+        last_season: last_season,
         channel_picture: channel_pic,
       });
 
@@ -889,7 +961,7 @@ function createChannel(title, id, channel_pic) {
         if (err) throw err;
 
         console.log("Channel successfully saved.");
-        mongoose.connection.close();
+        //mongoose.connection.close();
       });
     });
   });

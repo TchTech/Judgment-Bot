@@ -19,6 +19,14 @@ client.on("message", (msg)=>{
             msg.member.roles.add(minecraft_role)
             msg.reply("Вы получили роль `Minecraft-Gamer`. Теперь вы имеете доступ к категории о **Minecraft**.\n*Спасибо за использование нашего сервиса!*")
             break
+        case "b!mute":
+            if(msg.member.hasPermission("ADMINISTRATOR")){
+            let mute_role = msg.guild.roles.cache.get("807348064742146088")
+            let lawbreaker = msg.mentions.members.first()
+            lawbreaker.roles.add(mute_role)
+            msg.reply("Мьют прошел успешно, спасибо!")}
+            else msg.reply('НЕТ ПРАВ.')
+            break
         case "b!terraria":
             let terraria_role = msg.guild.roles.cache.get("858714294724329472")
             msg.member.roles.add(terraria_role)

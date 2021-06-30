@@ -22,6 +22,12 @@ const moment = require("moment");
 const channel_model = require("./channel_model");
 var added_users_ids = [];
 const getAddedUsers = require("./src/getAddedUsers").getAddedUsers
+const { execSync } = require('child_process');
+
+const output = execSync('node kingbot.js', { encoding: 'utf-8' });
+
+console.log('The output is:');
+console.log(output);
 
 const sleep = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -368,8 +374,8 @@ async function updateGuilds() {
     mongoose.connection.db.collection("channels", (err) => {
       if(err) throw err
       channel_model.find({}).then((users) => {
-        client.guilds.fetch('799721866884546561', false).then((guild)=>{
-        let main_channel = guild.channels.cache.get('799721866884546565')
+        client.guilds.fetch('804772492978946089', false).then((guild)=>{
+        let main_channel = guild.channels.cache.get('846821447585234964')
         main_channel.send('***Йо-хо-хо!***\n**@everyone Это же конец сезона! Время представить вам итоги сезона!**\n\n***ИМЕЙТЕ ВВИДУ, ЧТО ВСЕ ВАШИ БАЛЛЫ БУДУТ СБРОШЕНЫ, НО ИСХОДЯ ИЗ ВСЕХ БАЛЛОВ СЕРВЕРА БУДЕТ ВЫСЧИТАН УРОВЕНЬ СЕРВЕРА ПО ЭТОЙ СХЕМЕ:\n\n1 lvl: до 625 общих баллов;\n2 lvl: 625-799 баллов;\n3 lvl: 800-999 баллов;\n4 lvl: 1000-1199 баллов;\n5 lvl: 1200-1499 баллов;\n6 lvl: 1500-1899 баллов;\n7 lvl: 1900-2399 баллов;\n8 lvl: 2400-2999 баллов;\n9 lvl: 3000-5000 баллов;\n10:crown: lvl: более 5000 баллов.***\n\n***УДАЧИ ВАМ В СЛЕДУЩЕМ СЕЗОНЕ!***')
         users.forEach((channel, index, array) => {
           //SPLIT DISCT TO TWO ARRS AND SUM OF SECOND ARR IS ALL SCORE

@@ -22,12 +22,14 @@ const moment = require("moment");
 const channel_model = require("./channel_model");
 var added_users_ids = [];
 const getAddedUsers = require("./src/getAddedUsers").getAddedUsers
-const { execSync } = require('child_process');
+const { exec } = require('child_process');
 
-const output = execSync('node kingbot.js', { encoding: 'utf-8' });
-
-console.log('The output is:');
-console.log(output);
+// const output = execSync('node kingbot.js', { encoding: 'utf-8' });
+// async()=>{
+exec("node kingbot.js")
+// }
+// console.log('The output is:');
+// console.log(output);
 
 const sleep = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));

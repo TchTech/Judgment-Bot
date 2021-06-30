@@ -2,15 +2,16 @@ const Discord = require("discord.js");
 const client = new Discord.Client({
 //  ws: { intents: "GUILD_MEMBERS" },
 });
+// const { Client } = require("discord-slash-commands-client");
 var cron = require('node-cron');
 const configfile = require("./data/config.json");
-const prefix = configfile.prefix;
+//const prefix = configfile.prefix;
 const token = configfile.token;
 const commands = require("./commands.json");
-const falls_of_users = {};
+//const falls_of_users = {};
 const help_messages = require("./helps.json");
 //const db_work = require("./db_work");
-var is_allowed_to_fall = true;
+//var is_allowed_to_fall = true;
 const conflicts = {};
 var is_allowed_to_census = true;
 var mongoose = require("mongoose");
@@ -26,11 +27,23 @@ const sleep = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
 
-
 // MAIN TODO: SEASONS AND THEN DB USERS ADD; SAVE ALL ADDED IDS IN ARRAY IN READY; MAKE FEWER USER PRINT IN RATING;
 
+// const command_client = new Client(
+//   token,
+//   "799723410572836874"
+// );
 
-/*TODO: B!OPTION;
+// command_client
+//   .createCommand({
+//     name: "b!repeat",
+//     description: "repeats the message",
+//   })
+//   .then(console.log)
+//   .catch(console.error);
+
+/*TODO: BOTTER.PY;
+        B!OPTION;
         HELP FIX;
         FALLS REFORMATION;
         FASTER RATING;
@@ -47,7 +60,6 @@ const sleep = (milliseconds) => {
         TESTS;
         ~NOTIFIER;
         */
-
 
 client.on("ready", () => {
   console.log("I am ready!");
@@ -165,7 +177,7 @@ client.on("message", (message) => {
           mongoose.set("useFindAndModify", true);
           mongoose.set("useNewUrlParser", true);
           mongoose.set("useUnifiedTopology", true);
-          mongoose.connect(mongo_uri, (err, client) => {
+          mongoose.connect(mongo_uri, (err) => {
             if (err) throw err;
             mongoose.connection.db.collection("users", (err) => {
               if (err) throw err;
@@ -326,7 +338,7 @@ client.on("message", (message) => {
         break;
       case commands.repeat:
         let textCommand = message.content.split(" ");
-        let deletedElement = textCommand.splice(0, 1);
+        textCommand.splice(0, 1);
         message.reply(
           message.author.username + " said: " + textCommand.join(" ")
         );

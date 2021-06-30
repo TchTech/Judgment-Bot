@@ -1,0 +1,26 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+		}
+	],
+	"settings":
+	{
+		"LSP":
+		{
+			"sorbet":
+			{
+				"enabled": true,
+			},
+		},
+	},
+	"debugger_configurations" : [
+    {
+        "name" : "JBot",
+        "request" : "launch",
+        "type" : "node",
+        "program": "${workspaceFolder}/bot.js",
+    }
+	],
+}

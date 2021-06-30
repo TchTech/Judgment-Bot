@@ -1,0 +1,901 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+		]
+	},
+	"buffers":
+	[
+		{
+			"contents": "const Discord = require(\"discord.js\");\nconst client = new Discord.Client({\n//  ws: { intents: \"GUILD_MEMBERS\" },\n});\nvar cron = require('node-cron');\nconst configfile = require(\"./data/config.json\");\n//const prefix = configfile.prefix;\nconst token = configfile.token;\nconst commands = require(\"./commands.json\");\n//const falls_of_users = {};\nconst help_messages = require(\"./helps.json\");\n//const db_work = require(\"./db_work\");\n//var is_allowed_to_fall = true;\nconst conflicts = {};\nvar is_allowed_to_census = true;\nvar mongoose = require(\"mongoose\");\nvar user_model = require(\"./user_model\");\nconst mongo_uri = configfile.mongo_uri\nvar conflict_model = require(\"./conflict_model\");\nconst moment = require(\"moment\");\nconst channel_model = require(\"./channel_model\");\nvar added_users_ids = [];\nconst getAddedUsers = require(\"./src/getAddedUsers\").getAddedUsers\n\nconst sleep = (milliseconds) => {\n  return new Promise((resolve) => setTimeout(resolve, milliseconds));\n};\n\n// MAIN TODO: SEASONS AND THEN DB USERS ADD; SAVE ALL ADDED IDS IN ARRAY IN READY; MAKE FEWER USER PRINT IN RATING;\n\n/*TODO: B!OPTION;\n        HELP FIX;\n        FALLS REFORMATION;\n        FASTER RATING;\n        ONLY ONE DB CONNECT;\n        CHANNEL ADDING LINKE USRS;\n        LOGS;\n        TRY-CATCH;\n        SITE;\n        +SEASONS;\n        GAME-ROLES;\n        LANGUAGE MODES;\n        README.MD;\n        TYPING;\n        TESTS;\n        ~NOTIFIER;\n        */\n\nclient.on(\"ready\", () => {\n  console.log(\"I am ready!\");\n  console.log(Discord.version);\n  client.user.setActivity(\n    \"Type b!enghelp for English help (Пропишите b!ruhelp для помощи на Русском)\"\n  );\n  getAddedUsers().then((users)=>{added_users_ids = users;});\n});\n\nclient.on(\"guildMemberAdd\", (member) => {\n  if (member.guild.id == \"804772492978946089\") {\n    let role = member.guild.roles.cache.find(\n      (role) => role.id == \"847184804377526332\"\n    );\n    member.roles.add(role);\n    member.send(\n      \"***Хе-хе-хе...***\\nТы сделал хороший выбор, друг! Наслаждайся анонсами бота, обращайся в поддержку и следи за новостями IT и GAME индустрии.\\nВ общем, рай на земле, не так ли?\"\n    );\n  }\n});\n\n\n\nclient.on(\"message\", (message) => {\n  if (\n    message.channel.type === \"dm\" &&\n    message.author.id != '799723410572836874'\n  ) {\n    message.reply(\n      \"Упсс... На данный момент вы не можете общаться со мной лично... Для этого есть сервера! Look at {official-j-bot-site-link-soon}\"\n    );\n  } else {\n    if (message.content.split(\" \")[0] === commands.cregistration) {\n      channelRegistration(message);\n    }\n    if (\n      !message.author.bot &&\n      client.guilds.cache.get(message.guild.id).member(message.author.id)\n    ) {\n        checkUserInDB(message);\n        giveScores(message);\n    } else if(message.author.id !== '799723410572836874'){\n      message.react(\"🚫\")\n    }\n    switch (message.content.split(\" \")[0]) {\n      case commands.score:\n        checkScore(message);\n        break;\n      case commands.rating:\n        mongoose.set(\"useFindAndModify\", true);\n        mongoose.set(\"useNewUrlParser\", true);\n        mongoose.set(\"useUnifiedTopology\", true);\n        mongoose.connect(mongo_uri, (err) => {\n          if (err) throw err;\n          mongoose.connection.db.collection(\"channels\", (err) => {\n            if (err) throw err;\n            channel_model.findOne(\n              { ds_id: message.guild.id },\n              (err, channel) => {\n                console.log(err, channel);\n                if (err) throw err;\n                asyncRating(channel, message);\n              }\n            );\n          });\n        });\n        break;\n      case commands.uregistration:\n        userRegistration(message);\n        break;\n      // case \"b!supertest\":\n      //   updateGuilds()\n      //   break;\n      case commands.birthday:\n        sendBirthday(message);\n        break;\n      case commands.introducing:\n        message.reply(\n          \"Настоящее сообщение с 09.04.21 (0.5):\\n@everyone Мы всё еще предлагаем вам внести свои данные в базу данных для получения возможности конфликтов при помощи `b!reg`.\\n И да... насчет конфликтов... на даный момент команда `b!conflict <нарушитель> <наказание (fall-kick-ban)> <причина>` ЗАРАБОТАЛА!!! Тестируйте её по поооооолной! Конец сообщения.\"\n        );\n        break;\n      case commands.conflict:\n        if (message.mentions.members.first() === undefined) {\n          message.reply(\n            \"Error: вы не указали пользователя, которого хотите осудить.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n          );\n        } else if (message.content.split(\" \")[3] === undefined) {\n          message.reply(\n            \"Error: вы не указали причину вашего обращения.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n          );\n        } else if (\n          message.content.split(\" \")[2] !== \"fall\" &&\n          message.content.split(\" \")[2] !== \"ban\" &&\n          message.content.split(\" \")[2] !== \"kick\"\n        ) {\n          message.reply(\n            \"Error: вы указали неверное значение наказания (или не указали его вовсе). Корректные значения: `fall`, `kick`, `ban`.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n          );\n        } else if (\n          message.mentions.members.first().user.id === \"799723410572836874\"\n        ) {\n          message.reply(\n            \"Error: Ты серьёзно? Ты пошел жаловаться на суд в суд..? Не-а, так не получится.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n          );\n        } else if (message.author.id === message.mentions.members.first().id) {\n          message.reply(\n            \"Error: извините, но вы не можете жаловаться на самого себя.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n          );\n        } else {\n          //CHECK IN DB\n          let conflict_id = new mongoose.Types.ObjectId();\n          let lawbreaker = message.mentions.members.first();\n          let authors_id = message.author.id;\n          console.log(authors_id);\n          //createUser(message.author.username, message.author.id, 0, [0], [message.guild.id], message.author.avatarURL())\n          mongoose.set(\"useFindAndModify\", true);\n          mongoose.set(\"useNewUrlParser\", true);\n          mongoose.set(\"useUnifiedTopology\", true);\n          mongoose.connect(mongo_uri, (err) => {\n            if (err) throw err;\n            mongoose.connection.db.collection(\"users\", (err) => {\n              if (err) throw err;\n              user_model.findOne({ ds_id: authors_id }, (err, user) => {\n                if (err) throw err;\n                if (user === null) {\n                  createUser(\n                    message.author.username,\n                    message.author.id,\n                    0,\n                    [0],\n                    [message.guild.id],\n                    message.author.avatarURL()\n                  );\n                  message.reply(\n                    \"Уупс... Вы не были занесены в базу даных... Но мы сами (автоматически) добавили вас в базу!\\n(*Продолжаем оформление конфликта...*)\"\n                  );\n                }\n              });\n              user_model.findOne({ ds_id: lawbreaker.user.id }, (err, user) => {\n                if (err) throw err;\n                if (user === null) {\n                  createUser(\n                    lawbreaker.user.username,\n                    lawbreaker.user.id,\n                    0,\n                    [0],\n                    [message.guild.id],\n                    lawbreaker.user.avatarURL()\n                  );\n                  message.reply(\n                    \"Уупс... Преступник не был занесён в базу даных... Но мы сами (автоматически) добавили его(её) в базу!\\n(*Продолжаем оформление конфликта...*)\"\n                  );\n                }\n              });\n              conflicts[message.mentions.members.first()] = {\n                reporter: message.author.username,\n                reason: message.content.split(\" \").slice(3).join(\" \"),\n                punishment: message.content.split(\" \").slice(2, 3).join(\" \"),\n              };\n              message.channel\n                .send(\n                  \"Предстать @everyone перед судом! На данный момент \" +\n                    conflicts[message.mentions.members.first()].reporter +\n                    \" устроил конфликт с \" +\n                    lawbreaker.user.username +\n                    \" из-за того, что \" +\n                    conflicts[message.mentions.members.first()].reason +\n                    \".\\nПредложенное решение: \" +\n                    conflicts[message.mentions.members.first()].punishment +\n                    \".\\n`ID конфликта: \" +\n                    conflict_id.toHexString() +\n                    \"`\"\n                )\n                .then((m) => {\n                  m.react(\"👍\");\n                  m.react(\"👎\");\n                  try {\n                    setTimeout(\n                      /*43200000*/ conflictConfirmation,\n                      7200000,\n                      m,\n                      conflict_id._id.toHexString(),\n                      conflicts[message.mentions.members.first()].punishment\n                    );\n                  } catch (e) {\n                    console.log(e);\n                  }\n                });\n            });\n            createConflict(conflict_id, message);\n          });\n        }\n        break;\n      case commands.census:\n        if (is_allowed_to_census === false) {\n          message.reply(\n            \"Sorry, please, you should wait for a while, because censuses are created too often.\"\n          );\n        } else {\n          //message.reply('Предстать @everyone перед судом! На данный момент ' + conflicts[message.mentions.members.first()].reporter + ' устроил конфликт с ' + lawbreaker.user.username + ' из-за того, что ' + conflicts[message.mentions.members.first()].reason + '.\\nПредложенное решение: ' + conflicts[message.mentions.members.first()].punishment + '.')\n          let comment = message.content.split(\" \").slice(1).join(\" \");\n          let is_empty = false;\n          if (comment === \"\") is_empty = true;\n          is_empty\n            ? message.channel\n                .send(\n                  \"Внимание, @everyone , была предложена перепись мнения (ну или сенсус). Настоятельно предлагаем поучавствовать в голосовании-опросе:\\n *Довольны ли вы устройством сервера?*\"\n                )\n                .then((m) => {\n                  m.react(\"👍\");\n                  m.react(\"👎\");\n                })\n            : message.channel\n                .send(\n                  'Внимание, @everyone , была предложена перепись мнения (ну или сенсус). Настоятельно предлагаем поучавствовать в голосовании-опросе:\\n *\"' +\n                    comment +\n                    '\"*'\n                )\n                .then((m) => {\n                  m.react(\"👍\");\n                  m.react(\"👎\");\n                });\n          is_allowed_to_census = false;\n          setTimeout(censusPermission, 900000);\n        }\n        break;\n      case commands.ru_help:\n        const helpEmbed = new Discord.MessageEmbed()\n          .setColor(\"#a6550c\")\n          .setTitle(\"***Help page***\")\n          .setThumbnail(message.author.avatarURL())\n          .setDescription(\"Последнее сообщение (07.05.2021)\")\n          .addFields(\n            {\n              name: \"`b!enghelp`\",\n              value: \"тоже самое что и `b!ruhelp`, но на английском языке!\",\n            },\n            { name: \"`b!repeat <message>`\", value: \"Повторение `message`.\" },\n            {\n              name: \"`b!conflict <linked-users-name> <punishment {fall, kick, ban}> <case>`\",\n              value:\n                \"Краеугольная функция нашего бота. Она позволяет сделать конфликт (пожаловаться) на преступника. Решение выносится через 2 часа. Опробуйте её!\",\n              inline: true,\n            },\n            {\n              name: \"`b!census <question>`\",\n              value:\n                \"Удобная функция, которая позволяет сделать опрос вида *ЗА/ПРОТИВ*. Если `question` не указан, будет опрос об удобстве сервера. Можно сделать лишь раз в 15 мин.\",\n              inline: true,\n            },\n            {\n              name: \"`b!score`\",\n              value:\n                \"Позволяет узнать свои баллы и уровень на сервере.\",\n              inline: true,\n            },\n            {\n              name: \"`b!rating`\",\n              value:\n                \"Позволяет узнать баллы лучших мемберов.\",\n              inline: true,\n            },\n            {\n              name: \"`b!birthday <linked-user>`\",\n              value:\n                \"Если вы использовали эту комманду, бот поздравит `<linked-user>` с днем рождения!.\",\n              inline: true,\n            }\n          )\n          .setTimestamp()\n          .setFooter(\n            \"Judgment-bot by TchTech\",\n            \"https://cdn.discordapp.com/app-icons/799723410572836874/683e0c1d8a42a80bc4fd727cccafec85.png\"\n          );\n\n        message.channel.send(helpEmbed);\n        break;\n      case commands.repeat:\n        let textCommand = message.content.split(\" \");\n        textCommand.splice(0, 1);\n        message.reply(\n          message.author.username + \" said: \" + textCommand.join(\" \")\n        );\n        console.log(\n          message.author.username + \" said: \" + textCommand.join(\" \")\n        );\n        break;\n      case commands.en_help:\n        message.reply(help_messages[\"eng-help-msg\"]);\n        break;\n    }\n  }\n});\n\ncron.schedule('0 0 1 * *', () => {\n  updateGuilds();\n})\n\nconst reducer = (accumulator, currentValue) => accumulator + currentValue;\n\nasync function updateGuilds() {\n  mongoose.set(\"useFindAndModify\", true);\n  mongoose.set(\"useNewUrlParser\", true);\n  mongoose.set(\"useUnifiedTopology\", true);\n  mongoose.connect(mongo_uri, (err) => {\n    if (err) throw err;\n    mongoose.connection.db.collection(\"channels\", (err) => {\n      if(err) throw err\n      channel_model.find({}).then((users) => {\n        client.guilds.fetch('799721866884546561', false).then((guild)=>{\n        let main_channel = guild.channels.cache.get('799721866884546565')\n        main_channel.send('***Йо-хо-хо!***\\n**@everyone Это же конец сезона! Время представить вам итоги сезона!**\\n\\n***ИМЕЙТЕ ВВИДУ, ЧТО ВСЕ ВАШИ БАЛЛЫ БУДУТ СБРОШЕНЫ, НО ИСХОДЯ ИЗ ВСЕХ БАЛЛОВ СЕРВЕРА БУДЕТ ВЫСЧИТАН УРОВЕНЬ СЕРВЕРА ПО ЭТОЙ СХЕМЕ:\\n\\n1 lvl: до 625 общих баллов;\\n2 lvl: 625-799 баллов;\\n3 lvl: 800-999 баллов;\\n4 lvl: 1000-1199 баллов;\\n5 lvl: 1200-1499 баллов;\\n6 lvl: 1500-1899 баллов;\\n7 lvl: 1900-2399 баллов;\\n8 lvl: 2400-2999 баллов;\\n9 lvl: 3000-5000 баллов;\\n10:crown: lvl: более 5000 баллов.***\\n\\n***УДАЧИ ВАМ В СЛЕДУЩЕМ СЕЗОНЕ!***')\n        users.forEach((channel, index, array) => {\n          //SPLIT DISCT TO TWO ARRS AND SUM OF SECOND ARR IS ALL SCORE\n            client.guilds.fetch(channel.ds_id, false).then((ds_channel) => {\n              let sub_channel = channel\n              channel.remove()\n              console.log(channel.scores)\n              createChannel(ds_channel.name, ds_channel.id, ds_channel.iconURL(), countSeasonLevel(scoresSum(sub_channel)));\n              main_channel.send(\"`\" + ds_channel.name + \": \" + countSeasonLevel(scoresSum(sub_channel)) + ' lvl`')\n        })\n          });\n        });\n      });\n    });\n  });\n}\n\nfunction scoresSum(channel) {\n  if(channel.scores === \"{}\") return 0 \n  else return Object.values(JSON.parse(channel.scores)).reduce(reducer);\n}\n\nfunction countSeasonLevel(score){\n  if(score < 625) return 1;\n  else if(score >= 625 && score < 800) return 2;\n  else if(score >= 800 && score < 1000) return 3;\n  else if(score >= 1000 && score < 1200) return 4;\n  else if(score >= 1200 && score < 1500) return 5;\n  else if(score >= 1500 && score < 1900) return 6;\n  else if(score >= 1900 && score < 2400) return 7;\n  else if(score >= 2400 && score < 3000) return 8;\n  else if(score >= 3000 && score < 5000) return 9;\n  else if(score >= 5000) return 10;\n}\n\nasync function sendBirthday(message) {\n  if (message.mentions.members.first() !== undefined) {\n    message.channel\n      .send(\n        \"Внимание, @everyone ! Сегодня день рождения у пользователя `\" +\n        message.mentions.members.first().user.username +\n        \"` ! Поздравляем его с этим замечательным днём и желаем всего исключительно наилучшего!\\n***УРА!!***\"\n      )\n      .then((msg) => sleep(5000).then(\n        msg.reactions.cache\n          .get(\"484535447171760141\")\n          .then((msg) => msg.react(\"🎆\"))\n      )\n      );\n  } else {\n    message.channel.send(\"Упс... Вы некорректно использовали команду...\");\n  }\n}\n\nasync function userRegistration(message) {\n  mongoose.connect(mongo_uri, (err) => {\n    if (err)\n      throw err;\n    mongoose.connection.db.collection(\"users\", (err) => {\n      if (err)\n        throw err;\n      user_model.findOne({ ds_id: message.author.id }, (err, user) => {\n        if (err)\n          throw err;\n        if (user == undefined) {\n          createUser(\n            message.author.username,\n            message.author.id,\n            0,\n            [0],\n            [message.guild.id],\n            message.author.avatarURL()\n          );\n          message.reply(\n            \"You was included to database successfully! Now you have ability for conflicts! Hooray!🎆\\n*Вы были успешно добавлены в базу данных! Отныне у вас есть возможность конфликтовать! Урра!🎆*\"\n          );\n        } else {\n          message.reply(\n            \"Oops... You was already included to database. You've already got conflict ability.\\n*Упс... Вы уже были добавлены в базу данных. Вы уже получили возможность конфликтовать.*\"\n          );\n        }\n      });\n    });\n  });\n}\n\nasync function checkScore(message) {\n  let day = moment().date();\n  if (day >= 19) {\n    message.author.bot;\n    message.channel.send(\n      \"***WARNING! VERY SOON OUR BOT WILL TURN OFF!***\"\n    );\n  }\n  mongoose.set(\"useFindAndModify\", true);\n  mongoose.set(\"useNewUrlParser\", true);\n  mongoose.set(\"useUnifiedTopology\", true);\n  await mongoose.connect(mongo_uri, (err) => {\n    if (err)\n      throw err;\n    mongoose.connection.db.collection(\"channels\", (err) => {\n      if (err)\n        throw err;\n      let authors_id = message.author.id.toString();\n      channel_model.findOne(\n        { ds_id: message.guild.id },\n        (err, channel) => {\n          if (err)\n            throw err;\n          let obj = JSON.parse(\n            JSON.parse(JSON.stringify(channel.scores))\n          );\n          message.reply(\n            \"Твоя настоящая стата: *`\" +\n            obj[authors_id] +\n            \" баллов; \" +\n            getLevel(obj[authors_id]) +\n            \" lvl.`*\"\n          );\n        }\n      );\n    });\n  });\n}\n\nasync function channelRegistration(message) {\n  mongoose.connect(mongo_uri, (err) => {\n    if (err)\n      throw err;\n    mongoose.connection.db.collection(\"channels\", (err) => {\n      if (err)\n        throw err;\n      channel_model.findOne({ ds_id: message.guild.id }, (err, channel) => {\n        if (err)\n          throw err;\n        if (channel == undefined) {\n          createChannel(\n            message.guild.name,\n            message.guild.id,\n            message.guild.iconURL()\n          );\n          message.reply(\n            \"Channel was included to database successfully! Now you have many abilities like score-getting! Hooray!🎆\\n*Канал был успешно добавлен в базу данных! Отныне у вас есть возможности вроде получения баллов! Урра!🎆*\"\n          );\n        } else {\n          message.reply(\n            \"Oops... You was already included to database.\\n*Упс... Вы уже были добавлены в базу данных.*\"\n          );\n        }\n      });\n    });\n  });\n}\n\nasync function giveScores(message) {\n  mongoose.set(\"useFindAndModify\", true);\n      mongoose.set(\"useNewUrlParser\", true);\n      mongoose.set(\"useUnifiedTopology\", true);\n  mongoose.connect(mongo_uri, (err) => {\n    if (err) throw err;\n  mongoose.connection.db.collection(\"channels\", (err) => {\n    if (err)\n      throw err;\n    let authors_id = message.author.id.toString();\n    channel_model.findOne({ ds_id: message.guild.id }, (err, channel) => {\n      console.log(err, channel);\n      if (err)\n        throw err;\n      console.log(\"SSGG\");\n      let obj = JSON.parse(channel.scores);\n      let day = moment().date();\n      let score;\n      if (day == 1 || day == 10 || day == 20 || day == 30) {\n        score = (obj[authors_id] || 0) + 6 + randomNumber(0, 4);\n        message.react(\"🎈\");\n      } else {\n        score = (obj[authors_id] || 0) + 2 + randomNumber(0, 4);\n      }\n      obj[authors_id] = score;\n      channel.scores = JSON.stringify(obj);\n      channel.save();\n    });\n  })\n  });\n}\n\n// FUNCTIONS --------------------------------------------------------------------\n\nasync function checkUserInDB(message) {\n  if (!added_users_ids.includes(message.author.id)) {\n    createUser(message.author.username, message.author.id, 0, [], message.author.avatarURL());\n    added_users_ids.push(message.author.id);\n  }\n}\n\n// function getAddedUsers() {\n//   let added_users_ids = []\n//   mongoose.connect(mongo_uri, (err) => {\n//     if (err)\n//       throw err;\n//     mongoose.connection.db.collection(\"users\", (err) => {\n//       if (err)\n//         throw err;\n//       user_model.find({}, (err, users) => {\n//         if (err)\n//           throw err;\n//         users.forEach((user, index, array) => {\n//           added_users_ids.push(user.ds_id);\n//           if(index + 1 === array.length){\n//             return added_users_ids\n//           }\n//         });\n//       });\n//     });\n//   });\n// }\n\nfunction sendRatingEmbed(users, message) {\n  if (users === {}) {\n    message.channel.send(\n      \"*Упс... ни одного пользователя с баллами не найдено...*\\nХе-хе-хе...\"\n    );\n  } else {\n    let ratingEmbed = new Discord.MessageEmbed()\n      .setColor(\"#f78649\")\n      .setTitle(\"***Рейтинг!***\")\n      .setThumbnail(client.user.avatarURL())\n      .addFields(users)\n      .setTimestamp()\n      .setFooter(\n        \"Judgment-bot by TchTech\",\n        \"https://cdn.discordapp.com/app-icons/799723410572836874/683e0c1d8a42a80bc4fd727cccafec85.png\"\n      );\n    message.channel.send(ratingEmbed);\n  }\n}\n\nfunction compareSecondColumn(a, b) {\n  if (b[1] === a[1]) {\n      return 0;\n  }\n  else {\n      return (b[1] < a[1]) ? -1 : 1;\n  }\n}\n\nfunction asyncRating(channel, message) {\n  let users = [];\n  let obj = JSON.parse(JSON.parse(JSON.stringify(channel.scores)));\n  //if(Object.keys(obj).includes(authors_id) === false){console.log(\"no user\", Object.keys(obj))//channel.scores.set(authors_id) = Math.random() + 9obj[authors_id] += Math.random() + 9;Object.assign(obj, {[authors_id]: 0})obj[authors_id] += 9 + randomNumber(0, 4)}else{console.log(\"all ok\", Object.values(obj))//channel.scores.set(authors_id) = channel.scores.get(authors_id) + Math.random() + 9}\n  //client.users.cache.find(user => user.id === key) message.guild.members.cache.get(key).user.username\n  let sortable = [];\n  for (let user in obj) {\n    sortable.push([user, obj[user]]);\n  }\n\n  sortable = sortable.sort((a,b)=>compareSecondColumn(a, b));\n  console.log(sortable);\n  console.log(client.users.cache)\n  let top_place = 1;\n  sortable.forEach((element, index) => {\n    console.log(element[0])\n    if (element[0] != '799723410572836874') {\n      message.guild.members.fetch(element[0], true).then((member) => {\n        console.log(index)\n        users.push({\n          name: top_place + \".\" + member.user.username + \":\",\n          value: (obj[element[0]] || 0) + \" Баллов;\",\n        });\n        top_place++;\n        if (index + 1 == sortable.length) {\n          sendRatingEmbed(users, message);\n        }\n      });\n    }\n  });\n}\n\nfunction getLevel(score) {\n  let result = 0;\n  let i = score;\n  let lvllim = 100;\n  while (i != 0) {\n    if (i > lvllim) {\n      result++;\n      lvllim += 45;\n    } else {\n      return result;\n    }\n  }\n}\n\nfunction conflictConfirmation(msg, conflict_id_str, punishment) {\n  mongoose.set(\"useFindAndModify\", true);\n  mongoose.set(\"useNewUrlParser\", true);\n  mongoose.set(\"useUnifiedTopology\", true);\n  mongoose.connect(mongo_uri, (err) => {\n    if (err) throw err;\n    mongoose.connection.db.collection(\"conflicts\", (err) => {\n      if (err) throw err;\n\n      try {\n        const reactions = msg.reactions.cache;\n        let positive_votes = reactions.get(\"👍\");\n        let negative_votes = reactions.get(\"👎\");\n\n        if (positive_votes.count > negative_votes.count) {\n          switch (punishment) {\n            case \"fall\":\n              fallProcess(positive_votes, negative_votes);\n              break;\n            case \"kick\":\n              kickProcess(positive_votes, negative_votes);\n              break;\n            case \"ban\":\n              banProcess(positive_votes, negative_votes);\n              break;\n          }\n        } else if (positive_votes.count < negative_votes.count) {\n          stopProcessLess(positive_votes, negative_votes);\n        } else if (positive_votes.count === negative_votes.count) {\n          stopProcessEqual(positive_votes, negative_votes);\n        }\n      } catch (err) {\n        console.log(err);\n      }\n    });\n  });\n\n  function stopProcessEqual(positive_votes, negative_votes) {\n    conflict_model.findByIdAndUpdate(\n      conflict_id_str,\n      {\n        support_votes: positive_votes.count,\n        decline_votes: negative_votes.count,\n        is_confirmed: \"NO\",\n      },\n      (err, conflict) => {\n        if (err) throw err;\n        msg.channel.send(\n          \"@everyone Внимание! По конфликту №`\" +\n            conflict_id_str +\n            \"` НЕ было вынесено решения, так как оказалось положительных и отрицательных голосов оказалось по-ровну!\"\n        );\n      }\n    );\n  }\n\n  function stopProcessLess(positive_votes, negative_votes) {\n    conflict_model.findByIdAndUpdate(\n      conflict_id_str,\n      {\n        support_votes: positive_votes.count,\n        decline_votes: negative_votes.count,\n        is_confirmed: \"NO\",\n      },\n      (err, conflict) => {\n        if (err) throw err;\n        msg.channel.send(\n          \"@everyone Внимание! По конфликту №`\" +\n            conflict_id_str +\n            \"` НЕ было вынесено решения, так как оказалось больше отрицательных, чем положительных голосов!\"\n        );\n      }\n    );\n  }\n\nclass Process{\n\n}\n  function fallProcess(positive_votes, negative_votes) {\n    conflict_model.findByIdAndUpdate(\n      conflict_id_str,\n      {\n        support_votes: positive_votes.count,\n        decline_votes: negative_votes.count,\n        is_confirmed: \"YES\",\n      },\n      (err, conflict) => {\n        if (err) throw err;\n        mongoose.connection.db.collection(\"users\", (err) => {\n          console.log(conflict.lawbreaker.toString());\n          user_model.findOneAndUpdate(\n            { ds_id: conflict.lawbreaker.toString() },\n            { $inc: { falls: 1 } },\n            (err, user) => {\n              if (err) throw err;\n              console.log(user);\n              let user_lawbreaker = msg.guild.members.cache.get(\n                conflict.lawbreaker.toString()\n              );\n              msg.channel.send(\n                \"@everyone Внимание! По конфликту №`\" +\n                  conflict_id_str +\n                  \"` было вынесено решение в пользу пожаловавшегося!\\nРешение: `fall` для `\" +\n                  user_lawbreaker.user.username +\n                  \"`;\\n На данный момент у `\" +\n                  user_lawbreaker.user.username +\n                  \"` `\" +\n                  (user.falls + 1) +\n                  \"` фолл(а);\"\n              );\n              if (user.falls + 1 >= 3) {\n                if (user_lawbreaker.kickable === false) {\n                  msg.channel.send(\n                    \"ERROR: USER ISN'T KICKABLE. HIS FALLS: `\" +\n                      user.falls +\n                      \"`\\nномер конфликта: `\" +\n                      conflict_id_str +\n                      \"`\"\n                  );\n                } else {\n                  user_model.findOneAndUpdate(\n                    { ds_id: conflict.lawbreaker.toString() },\n                    { falls: 0 },\n                    (err) => {\n                      if (err) throw err;\n                    }\n                  );\n                  msg.channel.send(\n                    \"Пользователь `\" +\n                      user_lawbreaker.user.username +\n                      \"` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `\" +\n                      conflict_id_str +\n                      \"`), а значит суд изгоняет его из сервера! GOODBYE!\"\n                  );\n                  user_lawbreaker.kick();\n                }\n              }\n            }\n          );\n        });\n      }\n    );\n  }\n\n  function kickProcess(positive_votes, negative_votes) {\n    conflict_model.findByIdAndUpdate(\n      conflict_id_str,\n      {\n        support_votes: positive_votes.count,\n        decline_votes: negative_votes.count,\n        is_confirmed: \"YES\",\n      },\n      (err, conflict) => {\n        if (err) throw err;\n        let user_lawbreaker = msg.guild.members.cache.get(\n          conflict.lawbreaker.toString()\n        );\n        if (user_lawbreaker.kickable === false) {\n          msg.channel.send(\n            \"ERROR: USER ISN'T KICKABLE\\nномер конфликта: `\" +\n              conflict_id_str +\n              \"`\"\n          );\n        } else {\n          msg.channel.send(\n            \"@everyone Внимание! По конфликту №`\" +\n              conflict_id_str +\n              \"` было вынесено решение в пользу пожаловавшегося!\\nРешение: `kick` для `\" +\n              user_lawbreaker.user.username +\n              \"`\"\n          );\n          user_lawbreaker.kick();\n        }\n      }\n    );\n  }\n\n  function banProcess(positive_votes, negative_votes) {\n    conflict_model.findByIdAndUpdate(\n      conflict_id_str,\n      {\n        support_votes: positive_votes.count,\n        decline_votes: negative_votes.count,\n        is_confirmed: \"YES\",\n      },\n      (err, conflict) => {\n        if (err) throw err;\n        let user_lawbreaker = msg.guild.members.cache.get(\n          conflict.lawbreaker.toString()\n        );\n        msg.channel.send(\n          \"@everyone Внимание! По конфликту №`\" +\n            conflict_id_str +\n            \"` было вынесено решение в пользу пожаловавшегося!\\nРешение: `ban` для `\" +\n            user_lawbreaker.user.username +\n            \"`\\n*(start process...)*\"\n        );\n        try {\n          user_lawbreaker.ban();\n          msg.channel.send(\n            \"Процесс бана по конфликту номер `\" +\n              conflict_id_str +\n              \"` прошел успешно.\"\n          );\n        } catch {\n          msg.channel.send(\n            \"ERROR: USER COULD NOT BE BANNED.\\nномер конфликта: `\" +\n              conflict_id_str +\n              \"`\"\n          );\n        }\n      }\n    );\n  }\n}\n\nfunction createConflict(conflict_id, message) {\n  mongoose.connection.db.collection(\"conflicts\", (err) => {\n    if (err) throw err;\n    let newConflict = new conflict_model({\n      _id: conflict_id,\n      case: conflicts[message.mentions.members.first()].reason,\n      reporter: message.author.id,\n      lawbreaker: message.mentions.members.first(),\n      punishment: conflicts[message.mentions.members.first()].punishment,\n      support_votes: 1,\n      decline_votes: 1,\n      judgment_date: moment().add(12, \"hours\").toDate(),\n      is_confirmed: \"IN_WORK\",\n    });\n    newConflict.save((err) => {\n      if (err) throw err;\n    });\n  });\n}\n\nfunction randomNumber(min, max) {\n  const r = Math.random() * (max - min) + min;\n  return Math.floor(r);\n}\n// client.channels.cache.forEach((channel) => {\n//   console.log(channel);\n// });\nfunction fallsPermission() {\n  is_allowed_to_fall = true;\n}\n\nfunction censusPermission() {\n  is_allowed_to_census = true;\n}\n\nfunction createUser(\n  name,\n  id,\n  falls,\n  conflicts,\n  profile_pic_link\n) {\n  mongoose.set(\"useFindAndModify\", true);\n  mongoose.set(\"useNewUrlParser\", true);\n  mongoose.set(\"useUnifiedTopology\", true);\n  mongoose.connect(mongo_uri, function (err, client) {\n    if (err) throw err;\n    console.log(\"Successfully connected\");\n    mongoose.connection.db.collection(\"users\", function (err, collection) {\n      if (err) throw err;\n      console.log(\"Successfully connected to collection\");\n      var newUser = new user_model({\n        _id: new mongoose.Types.ObjectId(),\n        nickname: name,\n        ds_id: id,\n        falls: falls,\n        conficts_member: conflicts,\n        profile_picture: profile_pic_link,\n      });\n\n      newUser.save(function (err) {\n        if (err) throw err;\n\n        console.log(\"User successfully saved.\");\n        mongoose.connection.close();\n      });\n    });\n  });\n}\n\nasync function createChannel(title, id, channel_pic, last_season) {\n  last_season = last_season || 0\n  mongoose.set(\"useFindAndModify\", true);\n  mongoose.set(\"useNewUrlParser\", true);\n  mongoose.set(\"useUnifiedTopology\", true);\n  mongoose.connect(mongo_uri, function (err, client) {\n    if (err) throw err;\n    console.log(\"Successfully connected\");\n    mongoose.connection.db.collection(\"channels\", function (err, collection) {\n      if (err) throw err;\n      console.log(\"Successfully connected to collection\");\n      var newChannel = new channel_model({\n        _id: new mongoose.Types.ObjectId(),\n        name: title,\n        ds_id: id,\n        falls: {},\n        scores: \"{}\",\n        last_season: last_season,\n        channel_picture: channel_pic,\n      });\n\n      newChannel.save(function (err) {\n        if (err) throw err;\n\n        console.log(\"Channel successfully saved.\");\n        //mongoose.connection.close();\n      });\n    });\n  });\n}\n\nclient.login(token);\n\n// client.on(\"message\", (message) => {\n//   if (message.content.split(\" \")[0] === commands.cregistration){\n\n//     mongoose.connect(mongo_uri, (err)=>{\n//       if(err) throw err\n//       mongoose.connection.db.collection('channels', (err)=>{\n//         if(err) throw err\n//         channel_model.findOne({ds_id: message.guild.id}, (err, channel)=>{\n//           if(err) throw err\n//           if(channel == undefined){\n//             createChannel(message.guild.name, message.guild.id, message.guild.iconURL())\n//             message.reply(\"Channel was included to database successfully! Now you have many abilities like score-getting! Hooray!🎆\\n*Канал был успешно добавлен в базу данных! Отныне у вас есть возможности вроде получения баллов! Урра!🎆*\")\n//           }else{\n//             message.reply(\"Oops... You was already included to database.\\n*Упс... Вы уже были добавлены в базу данных.*\")\n//           }\n//         })\n//       })\n//     })\n//   }\n// })\n\n// Create an event listener for messages\n// client.on(\"message\", (message) => {\n//   if (message.content.split(\" \")[0] === commands.repeat) {\n//     //let user = message.mentions.members.first();\n//     //console.log(user.kick())\n//     let textCommand = message.content.split(\" \");\n//     let deletedElement = textCommand.splice(0, 1);\n//     message.reply(message.author.username + \" said: \" + textCommand.join(\" \"));\n//     console.log(message.author.username + \" said: \" + textCommand.join(\" \"));\n//   }\n// });\n\n// client.on(\"message\", (message) => {\n//   if (message.content.split(\" \")[0] === commands.help) {\n//     message.reply(help_messages[\"eng-help-msg\"]);\n//   }\n// });\n\n// client.on(\"message\", (message) => {\n//   if (message.content.split(\" \")[0] === commands.ru_help) {\n//     //message.reply(help_messages[\"ru-help-msg\"]);\n//     const helpEmbed = new Discord.MessageEmbed()\n//       .setColor(\"#a6550c\")\n//       .setTitle(\"***Help page***\")\n//       .setThumbnail(message.author.avatarURL())\n//       .setDescription(\"Последнее сообщение (07.05.2021)\")\n//       .addFields(\n//         {\n//           name: \"`b!help`\",\n//           value: \"тоже самое что и `b!ruhelp`, но на английском языке!\",\n//         },\n//         { name: \"`b!repeat <message>`\", value: \"Повторение `message`.\" },\n//         {\n//           name: \"`b!conflict <linked-users-name> <punishment {fall, kick, ban}> <case>`\",\n//           value:\n//             \"Краеугольная функция нашего бота. Она позволяет сделать конфликт (пожаловаться) на преступника. Решение выносится через 2 часа. Опробуйте её!\",\n//           inline: true,\n//         },\n//         {\n//           name: \"`b!fall <linked-users-name> <case>`\",\n//           value:\n//             \"***ДАННАЯ ФУНКЦИЯ НЕ РАБОТАЕТ НА ДАННЫЙ МОМЕНТ!*** Выдает предупреждение преступнику. За 3 фолла - кик!\",\n//           inline: true,\n//         }\n//       )\n//       .setTimestamp()\n//       .setFooter(\n//         \"Judgment-bot by TchTech\",\n//         \"https://cdn.discordapp.com/app-icons/799723410572836874/683e0c1d8a42a80bc4fd727cccafec85.png\"\n//       );\n\n//     message.channel.send(helpEmbed);\n//   }\n// });\n\n// client.on(\"message\", (message) => {\n//   if (message.content.split(\" \")[0] === commands.gfall) {\n//     // CHECK IS THERE ARE ANY FALL COMMAND\n//     //if (message.member.roles.find(role => role.name === 'The Boyare')){} CHECKING OF THE ROLE\n\n//     let roles_array = [];\n//     message.member.roles.cache.forEach((a) => {\n//       roles_array.push(a.name);\n//     });\n\n//     if (roles_array.includes(\"Lawbreaker\")) {\n//       message.reply(\n//         message.author.username +\n//           \" is the Lawbreaker, that's why i will not listen to him!\"\n//       );\n//     } else {\n//       if (typeof message.content.split(\" \")[2] !== \"string\") {\n//         //WRONG MESSAGE OF SYNTAX\n//         message.reply(\n//           \"clarify the user's misconduct with a comment {`b!fall <username> <comment>`}\"\n//         );\n//       } else {\n//         //DO THE MASSIVE AS A KEY WITH CASES AND FALLS\n\n//         let user = message.mentions.members.first(); //GETTING THE NAME OF THE LAWBREAKER\n//         if (user == undefined) {\n//           message.reply(\n//             \"You've written something wrong. Maybe linked name isn't user's (maybe linked name of role). If you didn't use linked name of the role, try again.\"\n//           );\n//         } else {\n//           if (is_allowed_to_fall === false) {\n//             message.reply(\n//               \"Sorry, I have not got that permission now. Try to wait for a while...\"\n//             );\n//           } else {\n//             falls_of_users[user] = (falls_of_users[user] || 0) + 1; //ADD FALL TO COLLECTED FALLS\n//             if (falls_of_users[user] >= 3) {\n//               //FINAL KICK IF COLLECTED SETTED NUMBERS OF FALLS (THREE)\n//               let bool_err = false;\n//               user.kick().catch((err) => {\n//                 message.reply(\"ERROR APPEARED: \" + err.message);\n//                 bool_err = true;\n//               });\n//               // KICK\n//               if (bool_err != true) {\n//                 message.reply(\n//                   user.user.username +\n//                     \" has been kicked, because user has collected \" +\n//                     falls_of_users[user] +\n//                     \" fall(s)!\"\n//                 );\n//               }\n//             } else {\n//               //THE MESSAGE OF NEW FALL (HASN'T COLLECTED SETTED NUMBER OF FALLS)\n//               message.reply(\n//                 user.user.username +\n//                   \" has already collected \" +\n//                   falls_of_users[user] +\n//                   \" fall(s) in case of \" +\n//                   message.content.split(\" \").slice(2).join(\" \") +\n//                   \"!\"\n//               );\n//               //is_allowed_to_fall = false;\n//               //setTimeout(fallsPermission, 1800000, 'funky')\n//             }\n//           }\n//         }\n//       }\n//     }\n//   }\n// });\n\n// client.on(\"message\", (message)=>{\n//   if(message.content.split(\" \")[0] === commands.rating){\n//   mongoose.set('useFindAndModify', true)\n//   mongoose.set('useNewUrlParser', true)\n//   mongoose.set('useUnifiedTopology', true)\n//   mongoose.connect(mongo_uri, (err)=>{\n//      if(err) throw err\n//      mongoose.connection.db.collection('channels', (err)=>{\n//         if(err) throw err\n//         channel_model.findOne({ds_id: message.guild.id}, (err, channel)=>{\n//           console.log(err, channel)\n//           if(err) throw err\n//           asyncRating(channel, message)\n//      })})\n//     })\n// }})\n\n// client.on(\"message\", (message) => {\n//   if (message.content.split(\" \")[0] === commands.uregistration){\n\n//     mongoose.connect(mongo_uri, (err)=>{\n//       if(err) throw err\n//       mongoose.connection.db.collection('users', (err)=>{\n//         if(err) throw err\n//         user_model.findOne({ds_id: message.author.id}, (err, user)=>{\n//           if(err) throw err\n//           if(user == undefined){\n//             createUser(message.author.username, message.author.id, 0, [0], [message.guild.id], message.author.avatarURL())\n//             message.reply(\"You was included to database successfully! Now you have ability for conflicts! Hooray!🎆\\n*Вы были успешно добавлены в базу данных! Отныне у вас есть возможность конфликтовать! Урра!🎆*\")\n//           }else{\n//             message.reply(\"Oops... You was already included to database. You've already got conflict ability.\\n*Упс... Вы уже были добавлены в базу данных. Вы уже получили возможность конфликтовать.*\")\n//           }\n//         })\n//       })\n//     })\n//   }\n// })\n\n// client.on(\"message\", (message) => {\n//   if (message.content.split(\" \")[0] === commands.introducing){\n//     message.reply(\"Настоящее сообщение с 09.04.21 (0.5):\\n@everyone Мы всё еще предлагаем вам внести свои данные в базу данных для получения возможности конфликтов при помощи `b!reg`.\\n И да... насчет конфликтов... на даный момент команда `b!conflict <нарушитель> <наказание (fall-kick-ban)> <причина>` ЗАРАБОТАЛА!!! Тестируйте её по поооооолной! Конец сообщения.\")\n// }})\n\n// client.on(\"message\", (message) => {\n//   if (message.content.split(\" \")[0] === commands.conflict) {\n//     if(message.mentions.members.first() === undefined){\n//       message.reply(\"Error: вы не указали пользователя, которого хотите осудить.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\")\n//     } else if(message.content.split(\" \")[3] === undefined){\n//       message.reply(\"Error: вы не указали причину вашего обращения.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\")\n//     } else if(message.content.split(\" \")[2] !== \"fall\" && message.content.split(\" \")[2] !== \"ban\" && message.content.split(\" \")[2] !== \"kick\"){\n//       message.reply(\"Error: вы указали неверное значение наказания (или не указали его вовсе). Корректные значения: `fall`, `kick`, `ban`.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\")\n//     } else if(message.mentions.members.first().user.id === \"799723410572836874\"){\n//       message.reply(\"Error: Ты серьёзно? Ты пошел жаловаться на суд в суд..? Не-а, так не получится.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\")\n//     } else if(message.author.id === message.mentions.members.first().id){\n//       message.reply(\"Error: извините, но вы не можете жаловаться на самого себя.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\")\n//     }\n//     else{ //CHECK IN DB\n//     let conflict_id = new mongoose.Types.ObjectId();\n//     let lawbreaker = message.mentions.members.first();\n//     let authors_id = message.author.id;\n//     console.log(authors_id);\n//     //createUser(message.author.username, message.author.id, 0, [0], [message.guild.id], message.author.avatarURL())\n//     mongoose.set('useFindAndModify', true)\n//     mongoose.set('useNewUrlParser', true)\n//     mongoose.set('useUnifiedTopology', true)\n//     mongoose.connect(mongo_uri, (err, client) => {\n//       if (err) throw err;\n//       mongoose.connection.db.collection(\"users\", (err) => {\n//         if (err) throw err;\n//         user_model.findOne({ ds_id: authors_id }, (err, user) => {\n//           if (err) throw err;\n//           if(user === null){\n//             createUser(message.author.username, message.author.id, 0, [0], [message.guild.id], message.author.avatarURL())\n//             message.reply(\"Уупс... Вы не были занесены в базу даных... Но мы сами (автоматически) добавили вас в базу!\\n(*Продолжаем оформление конфликта...*)\")\n//           }\n//         });\n//         user_model.findOne({ ds_id: lawbreaker.user.id }, (err, user) => {\n//           if (err) throw err;\n//           if(user === null){\n//             createUser(lawbreaker.user.username, lawbreaker.user.id, 0, [0], [message.guild.id], lawbreaker.user.avatarURL())\n//             message.reply(\"Уупс... Преступник не был занесён в базу даных... Но мы сами (автоматически) добавили его(её) в базу!\\n(*Продолжаем оформление конфликта...*)\")\n//           }\n//         });\n//         conflicts[message.mentions.members.first()] = {\n//           reporter: message.author.username,\n//           reason: message.content.split(\" \").slice(3).join(\" \"),\n//           punishment: message.content.split(\" \").slice(2, 3).join(\" \"),\n//         };\n//         message.channel\n//           .send(\n//             \"Предстать @everyone перед судом! На данный момент \" +\n//               conflicts[message.mentions.members.first()].reporter +\n//               \" устроил конфликт с \" +\n//               lawbreaker.user.username +\n//               \" из-за того, что \" +\n//               conflicts[message.mentions.members.first()].reason +\n//               \".\\nПредложенное решение: \" +\n//               conflicts[message.mentions.members.first()].punishment +\n//               \".\\n`ID конфликта: \" + conflict_id.toHexString() + \"`\"\n//           )\n//           .then((m) => {\n//             m.react(\"👍\");\n//             m.react(\"👎\");\n//             try{\n//               setTimeout(/*43200000*/conflictConfirmation, 7200000, m, conflict_id._id.toHexString(), conflicts[message.mentions.members.first()].punishment)\n//               } catch(e){\n//                 console.log(e)\n//               }\n//           });\n//       });\n//       createConflict(conflict_id, message);\n//     });\n//   }\n// }});\n\n// client.on(\"message\", (message) => {\n//   if (message.content.split(\" \")[0] === commands.census) {\n//     if (is_allowed_to_census === false) {\n//       message.reply(\n//         \"Sorry, please, you should wait for a while, because censuses are created too often.\"\n//       );\n//     } else {\n//       //message.reply('Предстать @everyone перед судом! На данный момент ' + conflicts[message.mentions.members.first()].reporter + ' устроил конфликт с ' + lawbreaker.user.username + ' из-за того, что ' + conflicts[message.mentions.members.first()].reason + '.\\nПредложенное решение: ' + conflicts[message.mentions.members.first()].punishment + '.')\n//       let comment = message.content.split(\" \").slice(1).join(\" \");\n//       let is_empty = false;\n//       if (comment === \"\") is_empty = true;\n//       is_empty\n//         ? message.channel\n//             .send(\n//               \"Внимание, @everyone , была предложена перепись мнения (ну или сенсус). Настоятельно предлагаем поучавствовать в голосовании-опросе:\\n *Довольны ли вы устройством сервера?*\"\n//             )\n//             .then((m) => {\n//               m.react(\"👍\");\n//               m.react(\"👎\");\n//             })\n//         : message.channel\n//             .send(\n//               'Внимание, @everyone , была предложена перепись мнения (ну или сенсус). Настоятельно предлагаем поучавствовать в голосовании-опросе:\\n *\"' +\n//                 comment +\n//                 '\"*'\n//             )\n//             .then((m) => {\n//               m.react(\"👍\");\n//               m.react(\"👎\");\n//             });\n//       is_allowed_to_census = false;\n//       setTimeout(censusPermission, 360000);\n//     }\n//   }\n// });\n\n//else if (message.content.split(\" \")[0] === ) {\n\n//   } else if (message.content.split(\" \")[0] === ) {\n\n//   } else if (message.content.split(\" \")[0] === commands.conflict) {\n//     if (message.mentions.members.first() === undefined) {\n//       message.reply(\n//         \"Error: вы не указали пользователя, которого хотите осудить.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n//       );\n//     } else if (message.content.split(\" \")[3] === undefined) {\n//       message.reply(\n//         \"Error: вы не указали причину вашего обращения.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n//       );\n//     } else if (\n//       message.content.split(\" \")[2] !== \"fall\" &&\n//       message.content.split(\" \")[2] !== \"ban\" &&\n//       message.content.split(\" \")[2] !== \"kick\"\n//     ) {\n//       message.reply(\n//         \"Error: вы указали неверное значение наказания (или не указали его вовсе). Корректные значения: `fall`, `kick`, `ban`.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n//       );\n//     } else if (\n//       message.mentions.members.first().user.id === \"799723410572836874\"\n//     ) {\n//       message.reply(\n//         \"Error: Ты серьёзно? Ты пошел жаловаться на суд в суд..? Не-а, так не получится.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n//       );\n//     } else if (message.author.id === message.mentions.members.first().id) {\n//       message.reply(\n//         \"Error: извините, но вы не можете жаловаться на самого себя.\\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`\"\n//       );\n//     } else {\n//       //CHECK IN DB\n//       let conflict_id = new mongoose.Types.ObjectId();\n//       let lawbreaker = message.mentions.members.first();\n//       let authors_id = message.author.id;\n//       console.log(authors_id);\n//       //createUser(message.author.username, message.author.id, 0, [0], [message.guild.id], message.author.avatarURL())\n//       mongoose.set(\"useFindAndModify\", true);\n//       mongoose.set(\"useNewUrlParser\", true);\n//       mongoose.set(\"useUnifiedTopology\", true);\n//       mongoose.connect(mongo_uri, (err, client) => {\n//         if (err) throw err;\n//         mongoose.connection.db.collection(\"users\", (err) => {\n//           if (err) throw err;\n//           user_model.findOne({ ds_id: authors_id }, (err, user) => {\n//             if (err) throw err;\n//             if (user === null) {\n//               createUser(\n//                 message.author.username,\n//                 message.author.id,\n//                 0,\n//                 [0],\n//                 [message.guild.id],\n//                 message.author.avatarURL()\n//               );\n//               message.reply(\n//                 \"Уупс... Вы не были занесены в базу даных... Но мы сами (автоматически) добавили вас в базу!\\n(*Продолжаем оформление конфликта...*)\"\n//               );\n//             }\n//           });\n//           user_model.findOne({ ds_id: lawbreaker.user.id }, (err, user) => {\n//             if (err) throw err;\n//             if (user === null) {\n//               createUser(\n//                 lawbreaker.user.username,\n//                 lawbreaker.user.id,\n//                 0,\n//                 [0],\n//                 [message.guild.id],\n//                 lawbreaker.user.avatarURL()\n//               );\n//               message.reply(\n//                 \"Уупс... Преступник не был занесён в базу даных... Но мы сами (автоматически) добавили его(её) в базу!\\n(*Продолжаем оформление конфликта...*)\"\n//               );\n//             }\n//           });\n//           conflicts[message.mentions.members.first()] = {\n//             reporter: message.author.username,\n//             reason: message.content.split(\" \").slice(3).join(\" \"),\n//             punishment: message.content.split(\" \").slice(2, 3).join(\" \"),\n//           };\n//           message.channel\n//             .send(\n//               \"Предстать @everyone перед судом! На данный момент \" +\n//                 conflicts[message.mentions.members.first()].reporter +\n//                 \" устроил конфликт с \" +\n//                 lawbreaker.user.username +\n//                 \" из-за того, что \" +\n//                 conflicts[message.mentions.members.first()].reason +\n//                 \".\\nПредложенное решение: \" +\n//                 conflicts[message.mentions.members.first()].punishment +\n//                 \".\\n`ID конфликта: \" +\n//                 conflict_id.toHexString() +\n//                 \"`\"\n//             )\n//             .then((m) => {\n//               m.react(\"👍\");\n//               m.react(\"👎\");\n//               try {\n//                 setTimeout(\n//                   /*43200000*/ conflictConfirmation,\n//                   7200000,\n//                   m,\n//                   conflict_id._id.toHexString(),\n//                   conflicts[message.mentions.members.first()].punishment\n//                 );\n//               } catch (e) {\n//                 console.log(e);\n//               }\n//             });\n//         });\n//         createConflict(conflict_id, message);\n//       });\n//     }\n//   } else if (message.content.split(\" \")[0] === commands.census) {\n//     }\n//   }\n// });\n",
+			"file": "bot.js",
+			"file_size": 61010,
+			"file_write_time": 132695415173798656,
+			"settings":
+			{
+				"buffer_size": 53456,
+				"line_ending": "Windows"
+			},
+			"undo_stack":
+			[
+				[
+					5,
+					1,
+					"insert",
+					{
+						"characters": "\n"
+					},
+					"AQAAAD8EAAAAAAAAQAQAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAA/BAAAAAAAAD8EAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					7,
+					1,
+					"insert",
+					{
+						"characters": "cl"
+					},
+					"AgAAAD8EAAAAAAAAQAQAAAAAAAAAAAAAQAQAAAAAAABBBAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAA/BAAAAAAAAD8EAAAAAAAAAAAAAAAAAAA"
+				],
+				[
+					8,
+					1,
+					"left_delete",
+					null,
+					"AQAAAEAEAAAAAAAAQAQAAAAAAAABAAAAbA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABBBAAAAAAAAEEEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					9,
+					1,
+					"insert",
+					{
+						"characters": "l"
+					},
+					"AQAAAEAEAAAAAAAAQQQAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABABAAAAAAAAEAEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					10,
+					1,
+					"insert_completion",
+					{
+						"completion": "client",
+						"format": "text",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAD8EAAAAAAAAPwQAAAAAAAACAAAAY2w/BAAAAAAAAEUEAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABBBAAAAAAAAEEEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					11,
+					1,
+					"insert",
+					{
+						"characters": "."
+					},
+					"AQAAAEUEAAAAAAAARgQAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABFBAAAAAAAAEUEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					12,
+					7,
+					"left_delete",
+					null,
+					"BwAAAEUEAAAAAAAARQQAAAAAAAABAAAALkQEAAAAAAAARAQAAAAAAAABAAAAdEMEAAAAAAAAQwQAAAAAAAABAAAAbkIEAAAAAAAAQgQAAAAAAAABAAAAZUEEAAAAAAAAQQQAAAAAAAABAAAAaUAEAAAAAAAAQAQAAAAAAAABAAAAbD8EAAAAAAAAPwQAAAAAAAABAAAAYw",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABGBAAAAAAAAEYEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					25,
+					1,
+					"insert",
+					{
+						"characters": "\n"
+					},
+					"AQAAAEAEAAAAAAAAQQQAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABABAAAAAAAAEAEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					27,
+					1,
+					"insert",
+					{
+						"characters": "cl"
+					},
+					"AgAAAEAEAAAAAAAAQQQAAAAAAAAAAAAAQQQAAAAAAABCBAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABABAAAAAAAAEAEAAAAAAAAAAAAAAAAAAA"
+				],
+				[
+					28,
+					1,
+					"insert_completion",
+					{
+						"completion": "lsp_select_completion_item {\"session_name\":\"LSP-typescript\",\"item\":{\"label\":\"client\",\"data\":{\"offset\":2,\"file\":\"c:\\\\Users\\\\Chesnokov\\\\Desktop\\\\Projects\\\\discordbot\\\\Discord-bot\\\\bot.js\",\"line\":32,\"entryNames\":[\"client\"]},\"commitCharacters\":[\".\",\",\",\"(\"],\"kind\":21,\"sortText\":\"1\"}}",
+						"format": "command",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAEAEAAAAAAAAQAQAAAAAAAACAAAAY2xABAAAAAAAAEYEAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABCBAAAAAAAAEIEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					29,
+					7,
+					"left_delete",
+					null,
+					"BwAAAEUEAAAAAAAARQQAAAAAAAABAAAAdEQEAAAAAAAARAQAAAAAAAABAAAAbkMEAAAAAAAAQwQAAAAAAAABAAAAZUIEAAAAAAAAQgQAAAAAAAABAAAAaUEEAAAAAAAAQQQAAAAAAAABAAAAbEAEAAAAAAAAQAQAAAAAAAABAAAAYz8EAAAAAAAAPwQAAAAAAAABAAAACg",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABGBAAAAAAAAEYEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					44,
+					1,
+					"insert",
+					{
+						"characters": "cli"
+					},
+					"AwAAAD8EAAAAAAAAQAQAAAAAAAAAAAAAQAQAAAAAAABBBAAAAAAAAAAAAABBBAAAAAAAAEIEAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAA/BAAAAAAAAD8EAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					45,
+					1,
+					"insert_completion",
+					{
+						"completion": "lsp_select_completion_item {\"session_name\":\"LSP-typescript\",\"item\":{\"label\":\"client\",\"data\":{\"offset\":4,\"file\":\"c:\\\\Users\\\\Chesnokov\\\\Desktop\\\\Projects\\\\discordbot\\\\Discord-bot\\\\bot.js\",\"line\":31,\"entryNames\":[\"client\"]},\"commitCharacters\":[\".\",\",\",\"(\"],\"kind\":21,\"sortText\":\"1\"}}",
+						"format": "command",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAD8EAAAAAAAAPwQAAAAAAAADAAAAY2xpPwQAAAAAAABFBAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABCBAAAAAAAAEIEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					46,
+					1,
+					"insert",
+					{
+						"characters": "."
+					},
+					"AQAAAEUEAAAAAAAARgQAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABFBAAAAAAAAEUEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					53,
+					9,
+					"left_delete",
+					null,
+					"CQAAAEUEAAAAAAAARQQAAAAAAAABAAAALkQEAAAAAAAARAQAAAAAAAABAAAAdEMEAAAAAAAAQwQAAAAAAAABAAAAbkIEAAAAAAAAQgQAAAAAAAABAAAAZUEEAAAAAAAAQQQAAAAAAAABAAAAaUAEAAAAAAAAQAQAAAAAAAABAAAAbD8EAAAAAAAAPwQAAAAAAAABAAAAYz4EAAAAAAAAPgQAAAAAAAABAAAACj0EAAAAAAAAPQQAAAAAAAABAAAACg",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABGBAAAAAAAAEYEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					88,
+					1,
+					"insert",
+					{
+						"characters": "cli"
+					},
+					"AwAAAD4EAAAAAAAAPwQAAAAAAAAAAAAAPwQAAAAAAABABAAAAAAAAAAAAABABAAAAAAAAEEEAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAA+BAAAAAAAAD4EAAAAAAAAAAAAAAAAAAA"
+				],
+				[
+					89,
+					1,
+					"insert_completion",
+					{
+						"completion": "client",
+						"format": "text",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAD4EAAAAAAAAPgQAAAAAAAADAAAAY2xpPgQAAAAAAABEBAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABBBAAAAAAAAEEEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					90,
+					1,
+					"insert",
+					{
+						"characters": "."
+					},
+					"AQAAAEQEAAAAAAAARQQAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABEBAAAAAAAAEQEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					91,
+					7,
+					"left_delete",
+					null,
+					"BwAAAEQEAAAAAAAARAQAAAAAAAABAAAALkMEAAAAAAAAQwQAAAAAAAABAAAAdEIEAAAAAAAAQgQAAAAAAAABAAAAbkEEAAAAAAAAQQQAAAAAAAABAAAAZUAEAAAAAAAAQAQAAAAAAAABAAAAaT8EAAAAAAAAPwQAAAAAAAABAAAAbD4EAAAAAAAAPgQAAAAAAAABAAAAYw",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABFBAAAAAAAAEUEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					92,
+					1,
+					"insert",
+					{
+						"characters": "cl"
+					},
+					"AgAAAD4EAAAAAAAAPwQAAAAAAAAAAAAAPwQAAAAAAABABAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAA+BAAAAAAAAD4EAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					93,
+					1,
+					"insert_completion",
+					{
+						"completion": "client",
+						"format": "text",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAD4EAAAAAAAAPgQAAAAAAAACAAAAY2w+BAAAAAAAAEQEAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABABAAAAAAAAEAEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					94,
+					1,
+					"insert",
+					{
+						"characters": "."
+					},
+					"AQAAAEQEAAAAAAAARQQAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABEBAAAAAAAAEQEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					95,
+					7,
+					"left_delete",
+					null,
+					"BwAAAEQEAAAAAAAARAQAAAAAAAABAAAALkMEAAAAAAAAQwQAAAAAAAABAAAAdEIEAAAAAAAAQgQAAAAAAAABAAAAbkEEAAAAAAAAQQQAAAAAAAABAAAAZUAEAAAAAAAAQAQAAAAAAAABAAAAaT8EAAAAAAAAPwQAAAAAAAABAAAAbD4EAAAAAAAAPgQAAAAAAAABAAAAYw",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABFBAAAAAAAAEUEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					96,
+					1,
+					"insert",
+					{
+						"characters": "cl"
+					},
+					"AgAAAD4EAAAAAAAAPwQAAAAAAAAAAAAAPwQAAAAAAABABAAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAA+BAAAAAAAAD4EAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					97,
+					3,
+					"left_delete",
+					null,
+					"AwAAAD8EAAAAAAAAPwQAAAAAAAABAAAAbD4EAAAAAAAAPgQAAAAAAAABAAAAYz0EAAAAAAAAPQQAAAAAAAABAAAACg",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAABABAAAAAAAAEAEAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					98,
+					1,
+					"insert",
+					{
+						"characters": "\n"
+					},
+					"AQAAAD0EAAAAAAAAPgQAAAAAAAAAAAAA",
+					"BQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwvwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAA9BAAAAAAAAD0EAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					3,
+					1,
+					"insert",
+					{
+						"characters": "cl"
+					},
+					"AgAAAD4EAAAAAAAAPwQAAAAAAAAAAAAAPwQAAAAAAABABAAAAAAAAAAAAAA",
+					"AwAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAD4EAAAAAAAAPgQAAAAAAAAAAAAAAADwvw"
+				],
+				[
+					4,
+					1,
+					"insert_completion",
+					{
+						"completion": "client",
+						"format": "text",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAD4EAAAAAAAAPgQAAAAAAAACAAAAY2w+BAAAAAAAAEQEAAAAAAAAAAAAAA",
+					"AwAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAEAEAAAAAAAAQAQAAAAAAAAAAAAAAADwvw"
+				],
+				[
+					5,
+					1,
+					"insert",
+					{
+						"characters": "."
+					},
+					"AQAAAEQEAAAAAAAARQQAAAAAAAAAAAAA",
+					"AwAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAEQEAAAAAAAARAQAAAAAAAAAAAAAAADwvw"
+				],
+				[
+					6,
+					7,
+					"left_delete",
+					null,
+					"BwAAAEQEAAAAAAAARAQAAAAAAAABAAAALkMEAAAAAAAAQwQAAAAAAAABAAAAdEIEAAAAAAAAQgQAAAAAAAABAAAAbkEEAAAAAAAAQQQAAAAAAAABAAAAZUAEAAAAAAAAQAQAAAAAAAABAAAAaT8EAAAAAAAAPwQAAAAAAAABAAAAbD4EAAAAAAAAPgQAAAAAAAABAAAAYw",
+					"AwAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAQAAAEUEAAAAAAAARQQAAAAAAAAAAAAAAADwvw"
+				],
+				[
+					9,
+					1,
+					"insert",
+					{
+						"characters": "\n\n"
+					},
+					"AgAAAJ4GAAAAAAAAnwYAAAAAAAAAAAAAnwYAAAAAAACgBgAAAAAAAAAAAAA",
+					"AgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAACeBgAAAAAAAJ4GAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					11,
+					1,
+					"insert",
+					{
+						"characters": "cli"
+					},
+					"AwAAAJ8GAAAAAAAAoAYAAAAAAAAAAAAAoAYAAAAAAAChBgAAAAAAAAAAAAChBgAAAAAAAKIGAAAAAAAAAAAAAA",
+					"AgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAACfBgAAAAAAAJ8GAAAAAAAAAAAAAAAAAAA"
+				],
+				[
+					12,
+					1,
+					"insert",
+					{
+						"characters": "e"
+					},
+					"AQAAAKIGAAAAAAAAowYAAAAAAAAAAAAA",
+					"AgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAACiBgAAAAAAAKIGAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					13,
+					4,
+					"left_delete",
+					null,
+					"BAAAAKIGAAAAAAAAogYAAAAAAAABAAAAZaEGAAAAAAAAoQYAAAAAAAABAAAAaaAGAAAAAAAAoAYAAAAAAAABAAAAbJ8GAAAAAAAAnwYAAAAAAAABAAAAYw",
+					"AgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAACjBgAAAAAAAKMGAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					14,
+					1,
+					"insert",
+					{
+						"characters": "clie"
+					},
+					"BAAAAJ8GAAAAAAAAoAYAAAAAAAAAAAAAoAYAAAAAAAChBgAAAAAAAAAAAAChBgAAAAAAAKIGAAAAAAAAAAAAAKIGAAAAAAAAowYAAAAAAAAAAAAA",
+					"AgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAACfBgAAAAAAAJ8GAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					15,
+					4,
+					"left_delete",
+					null,
+					"BAAAAKIGAAAAAAAAogYAAAAAAAABAAAAZaEGAAAAAAAAoQYAAAAAAAABAAAAaaAGAAAAAAAAoAYAAAAAAAABAAAAbJ8GAAAAAAAAnwYAAAAAAAABAAAAYw",
+					"AgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPC/AAAAAAEAAACjBgAAAAAAAKMGAAAAAAAAAAAAAAAA8L8"
+				],
+				[
+					5,
+					1,
+					"insert",
+					{
+						"characters": "cli"
+					},
+					"AwAAAJ8GAAAAAAAAoAYAAAAAAAAAAAAAoAYAAAAAAAChBgAAAAAAAAAAAAChBgAAAAAAAKIGAAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAnwYAAAAAAACfBgAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					6,
+					1,
+					"insert_completion",
+					{
+						"completion": "client",
+						"format": "text",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAJ8GAAAAAAAAnwYAAAAAAAADAAAAY2xpnwYAAAAAAAClBgAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAogYAAAAAAACiBgAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					7,
+					1,
+					"insert",
+					{
+						"characters": "."
+					},
+					"AQAAAKUGAAAAAAAApgYAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAApQYAAAAAAAClBgAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					8,
+					7,
+					"left_delete",
+					null,
+					"BwAAAKUGAAAAAAAApQYAAAAAAAABAAAALqQGAAAAAAAApAYAAAAAAAABAAAAdKMGAAAAAAAAowYAAAAAAAABAAAAbqIGAAAAAAAAogYAAAAAAAABAAAAZaEGAAAAAAAAoQYAAAAAAAABAAAAaaAGAAAAAAAAoAYAAAAAAAABAAAAbJ8GAAAAAAAAnwYAAAAAAAABAAAAYw",
+					"AQAAAAAAAAABAAAApgYAAAAAAACmBgAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					9,
+					1,
+					"insert",
+					{
+						"characters": "cl"
+					},
+					"AgAAAJ8GAAAAAAAAoAYAAAAAAAAAAAAAoAYAAAAAAAChBgAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAnwYAAAAAAACfBgAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					10,
+					1,
+					"insert_completion",
+					{
+						"completion": "client",
+						"format": "text",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAJ8GAAAAAAAAnwYAAAAAAAACAAAAY2yfBgAAAAAAAKUGAAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAoQYAAAAAAAChBgAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					11,
+					1,
+					"insert",
+					{
+						"characters": "."
+					},
+					"AQAAAKUGAAAAAAAApgYAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAApQYAAAAAAAClBgAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					12,
+					8,
+					"left_delete",
+					null,
+					"CAAAAKUGAAAAAAAApQYAAAAAAAABAAAALqQGAAAAAAAApAYAAAAAAAABAAAAdKMGAAAAAAAAowYAAAAAAAABAAAAbqIGAAAAAAAAogYAAAAAAAABAAAAZaEGAAAAAAAAoQYAAAAAAAABAAAAaaAGAAAAAAAAoAYAAAAAAAABAAAAbJ8GAAAAAAAAnwYAAAAAAAABAAAAY54GAAAAAAAAngYAAAAAAAABAAAACg",
+					"AQAAAAAAAAABAAAApgYAAAAAAACmBgAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					13,
+					1,
+					"left_delete",
+					null,
+					"AQAAAJ0GAAAAAAAAnQYAAAAAAAABAAAACg",
+					"AQAAAAAAAAABAAAAngYAAAAAAACeBgAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					30,
+					1,
+					"insert",
+					{
+						"characters": "\n\n"
+					},
+					"AgAAAFMIAAAAAAAAVAgAAAAAAAAAAAAAVAgAAAAAAABVCAAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAUwgAAAAAAABTCAAAAAAAAAAAAAAAADlA"
+				],
+				[
+					32,
+					1,
+					"insert",
+					{
+						"characters": "cl"
+					},
+					"AgAAAFQIAAAAAAAAVQgAAAAAAAAAAAAAVQgAAAAAAABWCAAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAVAgAAAAAAABUCAAAAAAAAAAAAAAAAAAA"
+				],
+				[
+					33,
+					1,
+					"insert_completion",
+					{
+						"completion": "client",
+						"format": "text",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAFQIAAAAAAAAVAgAAAAAAAACAAAAY2xUCAAAAAAAAFoIAAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAVggAAAAAAABWCAAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					34,
+					1,
+					"insert",
+					{
+						"characters": "."
+					},
+					"AQAAAFoIAAAAAAAAWwgAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAWggAAAAAAABaCAAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					35,
+					7,
+					"left_delete",
+					null,
+					"BwAAAFoIAAAAAAAAWggAAAAAAAABAAAALlkIAAAAAAAAWQgAAAAAAAABAAAAdFgIAAAAAAAAWAgAAAAAAAABAAAAblcIAAAAAAAAVwgAAAAAAAABAAAAZVYIAAAAAAAAVggAAAAAAAABAAAAaVUIAAAAAAAAVQgAAAAAAAABAAAAbFQIAAAAAAAAVAgAAAAAAAABAAAAYw",
+					"AQAAAAAAAAABAAAAWwgAAAAAAABbCAAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					36,
+					1,
+					"insert",
+					{
+						"characters": "cli"
+					},
+					"AwAAAFQIAAAAAAAAVQgAAAAAAAAAAAAAVQgAAAAAAABWCAAAAAAAAAAAAABWCAAAAAAAAFcIAAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAVAgAAAAAAABUCAAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					37,
+					1,
+					"insert_completion",
+					{
+						"completion": "client",
+						"format": "text",
+						"keep_prefix": false,
+						"must_insert": false,
+						"trigger": "client"
+					},
+					"AgAAAFQIAAAAAAAAVAgAAAAAAAADAAAAY2xpVAgAAAAAAABaCAAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAVwgAAAAAAABXCAAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					38,
+					1,
+					"insert",
+					{
+						"characters": "."
+					},
+					"AQAAAFoIAAAAAAAAWwgAAAAAAAAAAAAA",
+					"AQAAAAAAAAABAAAAWggAAAAAAABaCAAAAAAAAAAAAAAAAPC/"
+				],
+				[
+					39,
+					7,
+					"left_delete",
+					null,
+					"BwAAAFoIAAAAAAAAWggAAAAAAAABAAAALlkIAAAAAAAAWQgAAAAAAAABAAAAdFgIAAAAAAAAWAgAAAAAAAABAAAAblcIAAAAAAAAVwgAAAAAAAABAAAAZVYIAAAAAAAAVggAAAAAAAABAAAAaVUIAAAAAAAAVQgAAAAAAAABAAAAbFQIAAAAAAAAVAgAAAAAAAABAAAAYw",
+					"AQAAAAAAAAABAAAAWwgAAAAAAABbCAAAAAAAAAAAAAAAAPC/"
+				]
+			]
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"lsp",
+				"LSP: Enable Language Server in Project"
+			],
+			[
+				"java",
+				"Set Syntax: JavaScript"
+			],
+			[
+				"types",
+				"Set Syntax: TypeScript"
+			],
+			[
+				"mater",
+				"Activate Materialize Theme"
+			],
+			[
+				"pack",
+				"Package Control: Enable Package"
+			],
+			[
+				"disa",
+				"LSP: Disable Language Server Globally"
+			],
+			[
+				"dis",
+				"Package Control: Disable Package"
+			],
+			[
+				"enab",
+				"LSP: Enable Language Server in Project"
+			],
+			[
+				"packa",
+				"Package Control: Install Package"
+			],
+			[
+				"remo",
+				"Package Control: Remove Package"
+			],
+			[
+				"enable",
+				"LSP: Enable Language Server in Project"
+			],
+			[
+				"ena",
+				"LSP: Enable Language Server in Project"
+			],
+			[
+				"disab",
+				"LSP: Disable Language Server in Project"
+			],
+			[
+				"de",
+				"Debugger: Start"
+			],
+			[
+				"debu",
+				"Debugger: Start"
+			],
+			[
+				"debugg ",
+				"Debugger: Add or Select Configuration"
+			],
+			[
+				"deb",
+				"Debugger: Open"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"disabl",
+				"LSP: Disable Language Server in Project"
+			],
+			[
+				"istall",
+				"Package Control: Install Package"
+			],
+			[
+				"remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"prefere",
+				"Preferences: Terminus Key Bindings"
+			],
+			[
+				"termin",
+				"Preferences: Terminal Settings – Default"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/C/Users/Chesnokov/Desktop/Projects/discordbot/Discord-bot"
+	],
+	"file_history":
+	[
+		"/C/Users/Chesnokov/Desktop/Projects/discordbot/Discord-bot/jbot.sublime-project",
+		"/C/Users/Chesnokov/Desktop/Sublime Text 4 build 4102 (09 Apr 2021) x64 + CRACK/Data/Packages/Debugger/debugger.sublime-settings",
+		"/C/Users/Chesnokov/Desktop/Sublime Text 4 build 4102 (09 Apr 2021) x64 + CRACK/Data/Packages/Terminal/Terminal.sublime-settings",
+		"/C/Users/Chesnokov/Desktop/Sublime Text 4 build 4102 (09 Apr 2021) x64 + CRACK/Data/Packages/Terminality/Terminality.sublime-settings",
+		"/C/Users/Chesnokov/Desktop/Sublime Text 4 build 4102 (09 Apr 2021) x64 + CRACK/Data/Packages/User/Terminality.sublime-settings",
+		"/C/Users/Chesnokov/Desktop/Projects/discordbot/Discord-bot/jbot.sublime-workspace"
+	],
+	"find":
+	{
+		"height": 0.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"scrollbar_highlights": true,
+		"show_context": true,
+		"use_buffer2": true,
+		"use_gitignore": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "bot.js",
+					"selected": true,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 53456,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1395,
+								1395
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": "<",
+									"selector": "text.html, text.xml"
+								},
+								{
+									"rhs_empty": true,
+									"selector": "punctuation.accessor"
+								}
+							],
+							"lsp_hover_provider_count": 2,
+							"show_definitions": false,
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 646.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"stack_multiselect": false,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 0.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.Debugger":
+	{
+		"height": 259.0
+	},
+	"output.Debugger: Console":
+	{
+		"height": 0.0
+	},
+	"output.Debugger: Protocol":
+	{
+		"height": 0.0
+	},
+	"output.diagnostics":
+	{
+		"height": 0.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.language servers":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "jbot.sublime-project",
+	"replace":
+	{
+		"height": 0.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 337.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 574.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 213.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

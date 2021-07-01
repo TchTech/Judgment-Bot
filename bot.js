@@ -361,7 +361,7 @@ client.on("message", (message) => {
   }
 });
 
-cron.schedule('0 15 1 * *', () => {
+cron.schedule('25 14 1 * *', () => {
   updateGuilds();
 })
 

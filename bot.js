@@ -361,7 +361,7 @@ client.on("message", (message) => {
   }
 });
 
-var season = cron.schedule('42 14 1 * *', () => {
+var season = cron.schedule('0 15 1 * *', () => {
   updateGuilds();
 })
 

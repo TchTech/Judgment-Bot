@@ -1,0 +1,11 @@
+---
+application:
+  name: "discord-bot"
+  project: "JBOT"
+  organization: "QoveryCommunity"
+routers:
+- name: "main-discord-bot"
+  routes:
+  - application_name: "discord-bot"
+    paths:
+    - "/*"

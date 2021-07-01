@@ -361,13 +361,16 @@ client.on("message", (message) => {
   }
 });
 
-cron.schedule('25 14 1 * *', () => {
+var season = cron.schedule('42 14 1 * *', () => {
   updateGuilds();
 })
+
+season.start()
 
 const reducer = (accumulator, currentValue) => accumulator + currentValue;
 
 async function updateGuilds() {
+  console.log("update-guilds")
   mongoose.set("useFindAndModify", true);
   mongoose.set("useNewUrlParser", true);
   mongoose.set("useUnifiedTopology", true);

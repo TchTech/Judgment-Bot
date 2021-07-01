@@ -23,9 +23,16 @@ client.on("message", (msg)=>{
             if(msg.member.hasPermission("ADMINISTRATOR")){
             let mute_role = msg.guild.roles.cache.get("807348064742146088")
             let lawbreaker = msg.mentions.members.first()
-            lawbreaker.roles.add(mute_role)
+            lawbreaker.roles.remove(lawbreaker.roles.cache)
+            .then(()=>{lawbreaker.roles.add(mute_role).then(()=>{
             msg.reply("Мьют прошел успешно, спасибо!")}
+            )})}
             else msg.reply('НЕТ ПРАВ.')
+            break
+        case "b!amongus":
+            let amongus_role = msg.guild.roles.cache.get("858822236109406238")
+            msg.member.roles.add(amongus_role)
+            msg.reply("Вы получили роль `Among-Us-Gamer`. Теперь вы имеете доступ к категории об **Among us**.\n*Спасибо за использование нашего сервиса!*")
             break
         case "b!terraria":
             let terraria_role = msg.guild.roles.cache.get("858714294724329472")

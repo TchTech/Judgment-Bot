@@ -35,6 +35,19 @@ const sleep = (milliseconds) => {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 };
 
+// keeps the server alive
+const http = require('http');
+const express = require('express');
+const app = express();
+app.get("/", (request, response) => {
+  console.log(Date.now() + " Ping Received");
+  response.sendStatus(200);
+});
+app.listen(3000);
+setInterval(async () => {
+  await http.get(`https://discord-bot-kappa.vercel.app/`);
+}, 140000);
+
 // MAIN TODO: SEASONS AND THEN DB USERS ADD; SAVE ALL ADDED IDS IN ARRAY IN READY; MAKE FEWER USER PRINT IN RATING;
 
 // const command_client = new Client(
@@ -361,7 +374,7 @@ client.on("message", (message) => {
   }
 });
 
-var season = cron.schedule('0 15 1 * *', () => {
+var season = cron.schedule('0 0 30 * *', () => {
   updateGuilds();
 })
 

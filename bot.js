@@ -89,7 +89,7 @@ client.on("ready", () => {
     "Type b!enghelp for English help (Пропишите b!ruhelp для помощи на Русском)",
     {
       type: "STREAMING",
-      url: "https://www.twitch.tv/discord",
+      url: "https://www.twitch.tv/discord"
 
     }
   );

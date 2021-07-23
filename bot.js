@@ -86,7 +86,12 @@ client.on("ready", () => {
   console.log("I am ready!");
   console.log(Discord.version);
   client.user.setActivity(
-    "Type b!enghelp for English help (Пропишите b!ruhelp для помощи на Русском)"
+    "Type b!enghelp for English help (Пропишите b!ruhelp для помощи на Русском)",
+    {
+      type: "STREAMING",
+      url: "https://www.twitch.tv/discord",
+
+    }
   );
   getAddedUsers().then((users)=>{added_users_ids = users;});
 });

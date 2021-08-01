@@ -24,7 +24,8 @@ var added_users_ids = [];
 var added_channels_ids = [];
 const getAddedUsers = require("./src/getAddedUsers").getAddedUsers
 const { exec } = require('child_process');
-const getAddedChannels = require("./src/getAddedChannels").getAddedChannels
+const getAddedChannels = require("./src/getAddedChannels").getAddedChannels;
+const { exception } = require("console");
 
 // const output = execSync('node kingbot.js', { encoding: 'utf-8' });
 // async()=>{
@@ -134,17 +135,22 @@ client.on("message", (message) => {
             added_channels_ids.push(message.guild.id)
           })
         }
-        checkUserInDB(message);
-        giveScores(message);
+        checkUserInDB(message).catch((err)=>{
+          message.channel.send("ERROR: couldn't make check or save of " + message.author.username + " in DB...")
+          console.log(err)
+        });
+        giveScores(message).catch((err)=>{
+          message.channel.send("ERROR: unable give score to " + message.author.username)
+        });
     } else if(message.author.id !== '799723410572836874'){
       message.react("🚫")
     }
     switch (message.content.split(" ")[0]) {
       case commands.score:
-        //message.channel.startTyping()
-        checkScore(message).then(()=>{
-         // message.channel.stopTyping()
-        });
+        checkScore(message).catch((err)=>{
+          message.channel.send("ERROR: unable to check score of " + message.author.username)
+          console.log(err)
+        })
         break;
       case commands.rating:
         mongoose.set("useFindAndModify", true);
@@ -159,18 +165,23 @@ client.on("message", (message) => {
               (err, channel) => {
                 console.log(err, channel);
                 if (err) throw err;
+              try{
                 asyncRating(channel, message);
+              } catch(err){
+                message.channel.send("ERROR: unable to send rating.")
+                console.log(err)
+              }
               }
             );
           });
         });
         break;
-      case commands.uregistration:
-        message.channel.startTyping()
-        userRegistration(message).then(()=>{
-          message.channel.stopTyping()
-        });
-        break;
+      // case commands.uregistration:
+      //   message.channel.startTyping()
+      //   userRegistration(message).then(()=>{
+      //     message.channel.stopTyping()
+      //   });
+      //   break;
       // case "b!supertest":
       //   updateGuilds()
       //   break;
@@ -220,6 +231,7 @@ client.on("message", (message) => {
           let authors_id = message.author.id;
           console.log(authors_id);
           //createUser(message.author.username, message.author.id, 0, [0], [message.guild.id], message.author.avatarURL())
+          try{
           mongoose.set("useFindAndModify", true);
           mongoose.set("useNewUrlParser", true);
           mongoose.set("useUnifiedTopology", true);
@@ -292,13 +304,17 @@ client.on("message", (message) => {
                     console.log(e);
                   }
                 });
-            });
+          });
             createConflict(conflict_id, message);
           });
-        }
+        }catch(err){
+        message.channel.send("ERROR: something went wrong in conflict process.")
+        console.log(err)}
         break;
+      }
       case commands.census:
         message.channel.startTyping()
+        try{
         if (is_allowed_to_census === false) {
           message.reply(
             "Sorry, please, you should wait for a while, because censuses are created too often."
@@ -331,6 +347,8 @@ client.on("message", (message) => {
           is_allowed_to_census = false;
           message.channel.stopTyping()
           setTimeout(censusPermission, 900000);
+        }}catch(err){
+          message.channel.send("ERROR: something went wrong in census process.")
         }
         break;
       case commands.ru_help:

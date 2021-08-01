@@ -31,12 +31,12 @@ classifier.addDocuments(negativeDocuments, `negative`)
  
 classifier.train()
  
-console.log(classifier.classify(`Мне бы хотелось заключить ... мой народ в рабство :xexexe:`)) // "positive"
+console.log(classifier.classify(`The torta is epicly bad.`)) // "positive"
 console.log(classifier.classify(`I don't want to eat there again.`)) // "negative"
 console.log(classifier.classify(`The torta is epicly bad.`)) // "negative"
 console.log(classifier.classify(`The torta is tasty.`)) // "positive"
  
-console.log(classifier.getClassifications(`Мне бы хотелось заключить ... мой народ в рабство :xexexe:`))
+console.log(classifier.getClassifications(`The torta is epicly bad.`))
 /*
  [ { label: 'positive', value: 0.22222222222222224 },
    { label: 'negative', value: 0.11111111111111112 } ]

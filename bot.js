@@ -191,11 +191,12 @@ client.on("message", (message) => {
           message.channel.stopTyping()
         });
         break;
-      case commands.introducing:
-        message.reply(
-          "Настоящее сообщение с 09.04.21 (0.5):\n@everyone Мы всё еще предлагаем вам внести свои данные в базу данных для получения возможности конфликтов при помощи `b!reg`.\n И да... насчет конфликтов... на даный момент команда `b!conflict <нарушитель> <наказание (fall-kick-ban)> <причина>` ЗАРАБОТАЛА!!! Тестируйте её по поооооолной! Конец сообщения."
-        );
-        break;
+      // case commands.introducing:
+      // giveFall(message)
+      // checkFall(message).then((falls)=>{
+      //   message.reply(falls);
+      //   })
+      //   break;
       case commands.conflict:
         message.channel.startTyping()
         if (message.mentions.members.first() === undefined) {
@@ -626,6 +627,50 @@ async function giveScores(message) {
     });
   })
   });
+}
+
+async function giveFall(message){
+  mongoose.set("useFindAndModify", true);
+  mongoose.set("useNewUrlParser", true);
+  mongoose.set("useUnifiedTopology", true);
+  mongoose.connect(mongo_uri, (err) => {
+  if (err) throw err;
+  mongoose.connection.db.collection("channels", (err) => {
+    if (err)
+    throw err;
+    let authors_id = message.author.id.toString();
+    channel_model.findOne({ ds_id: message.guild.id }, (err, channel) => {
+        if (err) throw err
+        let obj = JSON.parse(channel.falls);
+        obj[authors_id] = (obj[authors_id] || 0) + 1;
+        channel.falls = JSON.stringify(obj);
+        channel.save().then(()=>{
+          message.reply("FG")
+        })
+    })
+  })
+})
+}
+
+async function checkFall(message){
+  return new Promise(resolve => {
+  mongoose.set("useFindAndModify", true);
+  mongoose.set("useNewUrlParser", true);
+  mongoose.set("useUnifiedTopology", true);
+  mongoose.connect(mongo_uri, (err) => {
+  if (err) throw err;
+  mongoose.connection.db.collection("channels", (err) => {
+    if (err)
+    throw err;
+    let authors_id = message.author.id.toString();
+    channel_model.findOne({ ds_id: message.guild.id }, (err, channel) => {
+        if (err) throw err
+        let obj = JSON.parse(channel.falls);
+        resolve((obj[authors_id] || 0))
+    })
+  })
+})
+})
 }
 
 // FUNCTIONS --------------------------------------------------------------------

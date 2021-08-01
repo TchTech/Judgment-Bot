@@ -15,7 +15,6 @@ async function getAddedChannels(
             channels.forEach((channel, index, array) => {
                 added_channels_ids.push(channel.ds_id);
                 if(index + 1 === array.length){
-                    mongoose.connection.close()
                     //callback(added_users_ids)
                     resolve(added_channels_ids)
               };

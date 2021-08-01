@@ -12,7 +12,7 @@ client.on("message", (msg)=>{
     console.log(msg.guild.roles)
     switch(msg.content.split(" ")[0]){
         case "b!games":
-            msg.reply("Спасибо что спросили! На данный момент доступны 7 ролей:\n`b!minecraft`: **Minecraft-Gamer**;\n`b!terraria`: **Terraria-Gamer**;\n`b!nintendo`: **NINTENDO-Gamer**;\n`b!gta`: **GTA-Gamer**;\n`b!wot`: **WOT-Gamer**;\n`b!csgo`: **Counter-Strike-Gamer**;\n`b!pubg`: **PUBG-Gamer**;\n")
+            msg.reply("Спасибо что спросили! На данный момент доступны эти роли:\n`b!dwarf`: **Dwarf-Fortress-Gamer**;\n`b!rust`: **Rust-Gamer**;\n`b!roblox`: **Roblox-Gamer**;\n`b!starve`: **Dont-Starve-Gamer**;\n`b!minecraft`: **Minecraft-Gamer**;\n`b!amongus`: **Amongus-Gamer**;\n`b!terraria`: **Terraria-Gamer**;\n`b!nintendo`: **NINTENDO-Gamer**;\n`b!gta`: **GTA-Gamer**;\n`b!wot`: **WOT-Gamer**;\n`b!csgo`: **Counter-Strike-Gamer**;\n`b!pubg`: **PUBG-Gamer**;\n")
             break
         case "b!minecraft":
             let minecraft_role = msg.guild.roles.cache.get("858709693088923658")
@@ -33,6 +33,26 @@ client.on("message", (msg)=>{
             let amongus_role = msg.guild.roles.cache.get("858822236109406238")
             msg.member.roles.add(amongus_role)
             msg.reply("Вы получили роль `Among-Us-Gamer`. Теперь вы имеете доступ к категории об **Among us**.\n*Спасибо за использование нашего сервиса!*")
+            break
+        case "b!starve":
+            let starve_role = msg.guild.roles.cache.get("871495227100266566")
+            msg.member.roles.add(starve_role)
+            msg.reply("Вы получили роль `Dont-Starve-Gamer`. Теперь вы имеете доступ к категории о **Dont Starve Together**.\n*Спасибо за использование нашего сервиса!*")
+            break
+        case "b!dwarf":
+            let dwarf_role = msg.guild.roles.cache.get("871495649064022057")
+            msg.member.roles.add(dwarf_role)
+            msg.reply("Вы получили роль `Dwarf-Fortress-Gamer`. Теперь вы имеете доступ к категории о **Dworf Fortress**.\n*Спасибо за использование нашего сервиса!*")
+            break
+        case "b!roblox":
+            let roblox_role = msg.guild.roles.cache.get("871496128288407552")
+            msg.member.roles.add(roblox_role)
+            msg.reply("Вы получили роль `Roblox-Gamer`. Теперь вы имеете доступ к категории о **Roblox**.\n*Спасибо за использование нашего сервиса!*")
+            break
+        case "b!rust":
+            let rust_role = msg.guild.roles.cache.get("871495641099038741")
+            msg.member.roles.add(rust_role)
+            msg.reply("Вы получили роль `Rust-Gamer`. Теперь вы имеете доступ к категории о **Rust**.\n*Спасибо за использование нашего сервиса!*")
             break
         case "b!terraria":
             let terraria_role = msg.guild.roles.cache.get("858714294724329472")

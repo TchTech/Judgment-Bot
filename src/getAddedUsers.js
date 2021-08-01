@@ -15,7 +15,6 @@ async function getAddedUsers(
             users.forEach((user, index, array) => {
                 added_users_ids.push(user.ds_id);
                 if(index + 1 === array.length){
-                    mongoose.connection.close()
                     //callback(added_users_ids)
                     resolve(added_users_ids)
               };

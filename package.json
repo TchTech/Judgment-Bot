@@ -8,6 +8,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "bayes-classifier": "0.0.5",
     "discord-slash-commands-client": "^1.2.1",
     "discord.js": "12.5.1",
     "express": "^4.17.1",

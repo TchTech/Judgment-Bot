@@ -4,8 +4,14 @@ var channelSchema = mongoose.Schema({
 _id: mongoose.Schema.Types.ObjectId,
 	name: String,
 	ds_id: String,
-	falls: Map,
-    scores: String,
+	falls: {
+		type: String,
+		default: "{}"
+},
+    scores: {
+		type: String,
+		default: "{}"
+},
 	last_season: Number,
 	channel_picture: String,
 	created: { 

@@ -26,6 +26,7 @@ const getAddedUsers = require("./src/getAddedUsers").getAddedUsers
 const { exec } = require('child_process');
 const getAddedChannels = require("./src/getAddedChannels").getAddedChannels;
 const { exception } = require("console");
+var message_amount = {}
 
 // const output = execSync('node kingbot.js', { encoding: 'utf-8' });
 // async()=>{
@@ -84,6 +85,7 @@ const sleep = (milliseconds) => {
         README.MD;
         +TYPING;
         TESTS;
+	MAKE MESSAGE DELETER ON SPAM;
         ~NOTIFIER;
         */
 
@@ -91,7 +93,7 @@ client.on("ready", () => {
   console.log("I am ready!");
   console.log(Discord.version);
   client.user.setActivity(
-    "Type b!enhelp for English help (Пропишите b!ruhelp для помощи на Русском)",
+    "Type b!enghelp for English help (Пропишите b!ruhelp для помощи на Русском)",
     {
       type: "STREAMING",
       url: "https://www.twitch.tv/discord"
@@ -141,7 +143,9 @@ client.on("message", (message) => {
         });
         giveScores(message).catch((err)=>{
           message.channel.send("ERROR: unable give score to " + message.author.username)
+          console.log(err)
         });
+        antiSpamDefender(message)
     } else if(message.author.id !== '799723410572836874'){
       message.react("🚫")
     }
@@ -722,6 +726,20 @@ function sendRatingEmbed(users, message) {
       );
     message.channel.send(ratingEmbed);
   }
+}
+
+var clearMsg
+async function antiSpamDefender(message){
+  message_amount[message.author.id] = (message_amount[message.author.id] || 0) + 1
+  if(clearMsg !==undefined) clearTimeout(clearMsg)
+  clearMsg = setTimeout(clearMessageAmount, 1333, message)
+  if(message_amount[message.author.id] >= 3){
+    message.reply("You should stop!")
+  }
+}
+
+async function clearMessageAmount(message){
+  delete message_amount[message.author.id]
 }
 
 function compareSecondColumn(a, b) {

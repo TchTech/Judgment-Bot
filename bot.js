@@ -27,6 +27,9 @@ const { exec } = require('child_process');
 const getAddedChannels = require("./src/getAddedChannels").getAddedChannels;
 const { exception } = require("console");
 var message_amount = {}
+var previous_messages = {}
+ //const spamcheck = require('spam-detection');
+
 
 // const output = execSync('node kingbot.js', { encoding: 'utf-8' });
 // async()=>{
@@ -730,16 +733,70 @@ function sendRatingEmbed(users, message) {
 
 var clearMsg
 async function antiSpamDefender(message){
-  message_amount[message.author.id] = (message_amount[message.author.id] || 0) + 1
+  const memberPath = message.guild.id + ":" + message.author.id;
+  console.log(message.mentions)
+  let hasPreviousRepeat = previousRepeatDetector(message.content, memberPath)
+  let hasWordsRepeat = wordsRepeatDetector(message.content)
+  let isGreaterThanLimit = greaterThanLimit(message.content)
+  let hasPings = extendsPings(message)
+  console.log(message.content.length)
+  message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasWordsRepeat + isGreaterThanLimit + hasPings
+  console.log("amount:" + message_amount[memberPath])
   if(clearMsg !==undefined) clearTimeout(clearMsg)
-  clearMsg = setTimeout(clearMessageAmount, 1333, message)
-  if(message_amount[message.author.id] >= 3){
+  clearMsg = setTimeout(clearMessageAmount, 1400, message)
+  if(message_amount[memberPath] >= 4){
     message.reply("You should stop!")
+  }
+
+}
+
+async function clearPreviousMessage(memberPath){
+  delete previous_messages[memberPath]
+}
+
+function greaterThanLimit(content){
+  const limit = 50;
+  if(content.length >= limit) return 1
+  else return 0
+}
+
+function extendsPings(message){
+  if(message.mentions.members != null || message.mentions.everyone === true|| message.mentions.roles != null|| message.mentions.users != null) return 1
+  else return 0
+}
+
+var previousMessageCleaner;
+
+function previousRepeatDetector(content, memberPath){
+  if(previousMessageCleaner !== undefined) clearTimeout(previousMessageCleaner)
+  if(content == previous_messages[memberPath]){
+    previous_messages[memberPath] = content
+    previousMessageCleaner = setTimeout(clearPreviousMessage, 7000, memberPath)
+    return 1
+  }else{
+    previous_messages[memberPath] = content
+    previousMessageCleaner = setTimeout(clearPreviousMessage, 7000, memberPath)
+    return 0
   }
 }
 
+function wordsRepeatDetector(content){
+  let words = content.split(" ")
+  let word_count = {}
+  words.forEach((word)=>{
+    word_count[word] = (word_count[word] || 0) + 1
+  })
+  let multiplier = 1
+  Object.values(word_count).forEach((value)=>{
+    multiplier *= value
+  })
+  const limit = 15
+  if(multiplier >= limit) return 1 
+  else return 0
+}
+
 async function clearMessageAmount(message){
-  delete message_amount[message.author.id]
+  delete message_amount[message.guild.id + ":" + message.author.id]
 }
 
 function compareSecondColumn(a, b) {

@@ -739,8 +739,9 @@ async function antiSpamDefender(message){
   let hasWordsRepeat = wordsRepeatDetector(message.content)
   let isGreaterThanLimit = greaterThanLimit(message.content)
   let hasPings = extendsPings(message)
+  let hasLetterRepeat = letterRepeatDetector(message.content)
   console.log(message.content.length)
-  message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasWordsRepeat + isGreaterThanLimit + hasPings
+  message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasWordsRepeat + isGreaterThanLimit + hasPings + hasLetterRepeat
   console.log("amount:" + message_amount[memberPath])
   if(clearMsg !==undefined) clearTimeout(clearMsg)
   clearMsg = setTimeout(clearMessageAmount, 1400, message)
@@ -748,6 +749,15 @@ async function antiSpamDefender(message){
     message.reply("You should stop!")
   }
 
+}
+
+function letterRepeatDetector(content){
+  let differences = 0;
+  content.split(" ").forEach((string)=>{
+    differences += string.length - string.split('').filter(function(item, pos, self) {return self.indexOf(item) == pos;}).join("").length;
+  })
+  if(differences>12) return 1
+  else return 0
 }
 
 async function clearPreviousMessage(memberPath){

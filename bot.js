@@ -745,7 +745,7 @@ async function antiSpamDefender(message){
   console.log("amount:" + message_amount[memberPath])
   if(clearMsg !==undefined) clearTimeout(clearMsg)
   clearMsg = setTimeout(clearMessageAmount, 1400, message)
-  if(message_amount[memberPath] >= 4){
+  if(message_amount[memberPath] >= 5){
     message.reply("You should stop!")
   }
 

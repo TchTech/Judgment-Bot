@@ -733,6 +733,9 @@ function sendRatingEmbed(users, message) {
 
 var clearMsg
 async function antiSpamDefender(message){
+  if(!message.author.bot 
+//&& !message.member.hasPermission("ADMINISTRATOR")
+){
   const memberPath = message.guild.id + ":" + message.author.id;
   console.log(message.mentions)
   let hasPreviousRepeat = previousRepeatDetector(message.content, memberPath)
@@ -744,11 +747,11 @@ async function antiSpamDefender(message){
   message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasWordsRepeat + isGreaterThanLimit + hasPings + hasLetterRepeat
   console.log("amount:" + message_amount[memberPath])
   if(clearMsg !==undefined) clearTimeout(clearMsg)
-  clearMsg = setTimeout(clearMessageAmount, 1400, message)
+  clearMsg = setTimeout(clearMessageAmount, 1100, message)
   if(message_amount[memberPath] >= 5){
     message.reply("You should stop!")
   }
-
+}
 }
 
 function letterRepeatDetector(content){

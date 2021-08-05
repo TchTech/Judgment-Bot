@@ -28,6 +28,7 @@ const getAddedChannels = require("./src/getAddedChannels").getAddedChannels;
 const { exception } = require("console");
 var message_amount = {}
 var previous_messages = {}
+const bot_logo = "https://cdn.discordapp.com/avatars/799723410572836874/51e3f97734ef1259f4587e7eba719cf1.png?size=128"
  //const spamcheck = require('spam-detection');
 
 
@@ -71,16 +72,16 @@ const sleep = (milliseconds) => {
 //   .catch(console.error);
 
 /*TODO: DISCORD BUTTONS ON CONFLICTS
-        RATING FIX
-        BOTTER.PY;
+TODO:   RATING FIX
+TODO:   BOTTER.PY;
         B!OPTION;
         HELP FIX;
         FALLS REFORMATION;
         FASTER RATING;
         ONLY ONE DB CONNECT;
-        CHANNEL ADDING LINKE USRS;
+        CHANNEL ADDING LINKE USRS; +
         LOGS;
-        TRY-CATCH;
+        TRY-CATCH; +
         +SITE;
         +SEASONS;
         +GAME-ROLES;
@@ -89,7 +90,7 @@ const sleep = (milliseconds) => {
         +TYPING;
         TESTS;
 	MAKE MESSAGE DELETER ON SPAM;
-        ~NOTIFIER;
+  SLASH COMMANDS;
         */
 
 client.on("ready", () => {
@@ -406,7 +407,7 @@ client.on("message", (message) => {
           .setTimestamp()
           .setFooter(
             "Judgment-bot by TchTech",
-            "https://cdn.discordapp.com/app-icons/799723410572836874/683e0c1d8a42a80bc4fd727cccafec85.png"
+            bot_logo
           );
           message.channel.stopTyping()
         message.channel.send(helpEmbed);
@@ -725,13 +726,15 @@ function sendRatingEmbed(users, message) {
       .setTimestamp()
       .setFooter(
         "Judgment-bot by TchTech",
-        "https://cdn.discordapp.com/app-icons/799723410572836874/683e0c1d8a42a80bc4fd727cccafec85.png"
+        bot_logo
       );
     message.channel.send(ratingEmbed);
   }
 }
 
 var clearMsg
+var warnings_amount = {}
+
 async function antiSpamDefender(message){
   if(!message.author.bot 
 //&& !message.member.hasPermission("ADMINISTRATOR")
@@ -750,6 +753,10 @@ async function antiSpamDefender(message){
   clearMsg = setTimeout(clearMessageAmount, 1100, message)
   if(message_amount[memberPath] >= 5){
     message.reply("You should stop!")
+    warnings_amount[memberPath] = (warnings_amount[memberPath] || 0) + 1
+    if(warnings_amount[memberPath] == 2){
+      
+    }
   }
 }
 }
@@ -810,6 +817,9 @@ function wordsRepeatDetector(content){
 
 async function clearMessageAmount(message){
   delete message_amount[message.guild.id + ":" + message.author.id]
+  if(warnings_amount[message.guild.id + ":" + message.author.id] !== undefined){
+    delete warnings_amount[message.guild.id + ":" + message.author.id]
+  }
 }
 
 function compareSecondColumn(a, b) {

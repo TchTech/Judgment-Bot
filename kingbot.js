@@ -8,6 +8,26 @@ client.on("ready", ()=>{
     client.user.setActivity("Пропишите b!games")
 })
 
+client.on("messageReactionAdd", (reaction, user)=>{
+    if(reaction.emoji.name == "✅" && reaction.message.author.id == "274930301917069313" && reaction.message.content == "Поставьте галочку для верификации, если вы знаете и согласны с правилами сервера."){
+        reaction.message.guild.roles.fetch("870948025286156308").then((role)=>{
+            reaction.message.guild.members.fetch(user.id).then((member)=>{
+                member.roles.add(role)
+            })
+        })
+    }
+})
+
+client.on("messageReactionRemove", (reaction, user)=>{
+    if(reaction.emoji.name == "✅" && reaction.message.author.id == "274930301917069313" && reaction.message.content == "Поставьте галочку для верификации, если вы знаете и согласны с правилами сервера."){
+        reaction.message.guild.roles.fetch("870948025286156308").then((role)=>{
+            reaction.message.guild.members.fetch(user.id).then((member)=>{
+                member.roles.remove(role)
+            })
+        })
+    }
+})
+
 client.on("message", (msg)=>{
     console.log(msg.guild.roles)
     switch(msg.content.split(" ")[0]){

@@ -2,16 +2,11 @@ const Discord = require("discord.js");
 const client = new Discord.Client({
 // ws: { intents: "GUILD_MEMBERS" },
 });
-// const { Client } = require("discord-slash-commands-client");
-//var cron = require('node-cron');
 const configfile = require("./data/config.json");
 //const prefix = configfile.prefix;
 const token = configfile.token;
 const commands = require("./commands.json");
-//const falls_of_users = {};
 const help_messages = require("./helps.json");
-//const db_work = require("./db_work");
-//var is_allowed_to_fall = true;
 const conflicts = {};
 var is_allowed_to_census = true;
 var mongoose = require("mongoose");
@@ -25,11 +20,10 @@ var added_channels_ids = [];
 const getAddedUsers = require("./src/getAddedUsers").getAddedUsers
 const { exec } = require('child_process');
 const getAddedChannels = require("./src/getAddedChannels").getAddedChannels;
-const { exception } = require("console");
+// const { exception } = require("console");
 var message_amount = {}
 var previous_messages = {}
 const bot_logo = "https://cdn.discordapp.com/avatars/799723410572836874/51e3f97734ef1259f4587e7eba719cf1.png?size=128"
- //const spamcheck = require('spam-detection');
 
 
 // const output = execSync('node kingbot.js', { encoding: 'utf-8' });
@@ -76,7 +70,9 @@ TODO:   RATING FIX
 TODO:   BOTTER.PY;
         B!OPTION;
         HELP FIX;
+        ========
         FALLS REFORMATION;
+        ==========
         FASTER RATING;
         ONLY ONE DB CONNECT;
         CHANNEL ADDING LINKE USRS; +
@@ -304,7 +300,7 @@ client.on("message", (message) => {
                   try {
                     setTimeout(
                       /*43200000*/ conflictConfirmation,
-                      7200000,
+                      7200,
                       m,
                       conflict_id._id.toHexString(),
                       conflicts[message.mentions.members.first()].punishment
@@ -965,55 +961,57 @@ class Process{
       },
       (err, conflict) => {
         if (err) throw err;
-        mongoose.connection.db.collection("users", (err) => {
-          console.log(conflict.lawbreaker.toString());
-          user_model.findOneAndUpdate(
-            { ds_id: conflict.lawbreaker.toString() },
-            { $inc: { falls: 1 } },
-            (err, user) => {
+        mongoose.connection.db.collection("channels", (err) => {
+          //console.log(conflict.lawbreaker.toString());
+          channel_model.findOne(
+            { ds_id: conflict.guild.toString() },
+            (err, channel) => {
               if (err) throw err;
-              console.log(user);
-              let user_lawbreaker = msg.guild.members.cache.get(
-                conflict.lawbreaker.toString()
-              );
-              msg.channel.send(
-                "@everyone Внимание! По конфликту №`" +
-                  conflict_id_str +
-                  "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" +
-                  user_lawbreaker.user.username +
-                  "`;\n На данный момент у `" +
-                  user_lawbreaker.user.username +
-                  "` `" +
-                  (user.falls + 1) +
-                  "` фолл(а);"
-              );
-              if (user.falls + 1 >= 3) {
-                if (user_lawbreaker.kickable === false) {
-                  msg.channel.send(
-                    "ERROR: USER ISN'T KICKABLE. HIS FALLS: `" +
-                      user.falls +
-                      "`\nномер конфликта: `" +
+              console.log(channel);
+              let falls = JSON.parse(channel.falls)
+              falls[conflict.lawbreaker] = (falls[conflict.lawbreaker] || 0) + 1
+              channel.falls = JSON.stringify(falls)
+              client.guilds.fetch(conflict.guild).then((guild)=>{
+                guild.members.fetch(
+                  conflict.lawbreaker
+                ).then((member)=>{
+                  let user_lawbreaker = member.user
+                  guild.channels.cache.get(conflict.channel).send(
+                    "@everyone Внимание! По конфликту №`" +
                       conflict_id_str +
-                      "`"
-                  );
-                } else {
-                  user_model.findOneAndUpdate(
-                    { ds_id: conflict.lawbreaker.toString() },
-                    { falls: 0 },
-                    (err) => {
-                      if (err) throw err;
-                    }
-                  );
-                  msg.channel.send(
-                    "Пользователь `" +
+                      "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" +
                       user_lawbreaker.user.username +
-                      "` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `" +
-                      conflict_id_str +
-                      "`), а значит суд изгоняет его из сервера! GOODBYE!"
+                      "`;\n На данный момент у `" +
+                      user_lawbreaker.user.username +
+                      "` `" +
+                      falls[channel.lawbreaker] +
+                      "` фолл(а);"
                   );
-                  user_lawbreaker.kick();
-                }
-              }
+                  if (falls[conflict.lawbreaker] >= 3) {
+                    if (user_lawbreaker.kickable === false) {
+                      guild.channels.cache.get(conflict.channel).send(
+                        "ERROR: USER ISN'T KICKABLE. HIS FALLS: `" +
+                          falls[conflict.lawbreaker] +
+                          "`\nномер конфликта: `" +
+                          conflict_id_str +
+                          "`"
+                      );
+                    } else {
+                      falls[conflict.lawbreaker] = 0
+                      msg.channel.send(
+                        "Пользователь `" +
+                          user_lawbreaker.user.username +
+                          "` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `" +
+                          conflict_id_str +
+                          "`), а значит суд изгоняет его из сервера! GOODBYE!"
+                      );
+                      user_lawbreaker.kick();
+                    }
+                  }
+                  channel.save()
+                })
+              })
+              
             }
           );
         });
@@ -1102,6 +1100,8 @@ function createConflict(conflict_id, message) {
       reporter: message.author.id,
       lawbreaker: message.mentions.members.first(),
       punishment: conflicts[message.mentions.members.first()].punishment,
+      guild: message.guild.id,
+      channel: message.channel.id,
       support_votes: 1,
       decline_votes: 1,
       judgment_date: moment().add(12, "hours").toDate(),
@@ -1178,7 +1178,7 @@ async function createChannel(title, id, channel_pic, last_season) {
         _id: new mongoose.Types.ObjectId(),
         name: title,
         ds_id: id,
-        falls: {},
+        falls: "{}",
         scores: "{}",
         last_season: last_season,
         channel_picture: channel_pic,

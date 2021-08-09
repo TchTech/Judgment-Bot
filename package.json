@@ -22,7 +22,6 @@
     "spam-detection": "^1.0.3"
   },
   "devDependencies": {
-    "corde": "^4.0.5",
     "jest": "^27.0.5"
   }
 }

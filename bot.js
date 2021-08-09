@@ -315,8 +315,8 @@ client.on("message", (message) => {
         }catch(err){
         message.channel.send("ERROR: something went wrong in conflict process.")
         console.log(err)}
-        break;
       }
+      break;
       case commands.census:
         message.channel.startTyping()
         try{

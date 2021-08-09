@@ -202,7 +202,6 @@ client.on("message", (message) => {
       //   })
       //   break;
       case commands.conflict:
-        message.channel.startTyping()
         if (message.mentions.members.first() === undefined) {
           message.reply(
             "Error: вы не указали пользователя, которого хотите осудить.\nНапоминаем синтаксис написания команды: `b!conflict <преступник> <наказание (fall, kick, ban)> <причина>`"
@@ -237,7 +236,7 @@ client.on("message", (message) => {
           console.log(authors_id);
           //createUser(message.author.username, message.author.id, 0, [0], [message.guild.id], message.author.avatarURL())
           try{
-          mongoose.set("useFindAndModify", true);
+          //mongoose.set("useFindAndModify", true);
           mongoose.set("useNewUrlParser", true);
           mongoose.set("useUnifiedTopology", true);
           mongoose.connect(mongo_uri, (err) => {
@@ -279,7 +278,6 @@ client.on("message", (message) => {
                 reason: message.content.split(" ").slice(3).join(" "),
                 punishment: message.content.split(" ").slice(2, 3).join(" "),
               };
-              message.channel.stopTyping()
               message.channel
                 .send(
                   "Предстать @everyone перед судом! На данный момент " +
@@ -303,7 +301,8 @@ client.on("message", (message) => {
                       7200,
                       m,
                       conflict_id._id.toHexString(),
-                      conflicts[message.mentions.members.first()].punishment
+                      conflicts[message.mentions.members.first()].punishment,
+                      message
                     );
                   } catch (e) {
                     console.log(e);
@@ -873,7 +872,7 @@ function getLevel(score) {
   }
 }
 
-function conflictConfirmation(msg, conflict_id_str, punishment) {
+function conflictConfirmation(msg_conflict, conflict_id_str, punishment, message_command) {
   mongoose.set("useFindAndModify", true);
   mongoose.set("useNewUrlParser", true);
   mongoose.set("useUnifiedTopology", true);
@@ -883,26 +882,26 @@ function conflictConfirmation(msg, conflict_id_str, punishment) {
       if (err) throw err;
 
       try {
-        const reactions = msg.reactions.cache;
+        const reactions = msg_conflict.reactions.cache;
         let positive_votes = reactions.get("👍");
         let negative_votes = reactions.get("👎");
 
         if (positive_votes.count > negative_votes.count) {
           switch (punishment) {
             case "fall":
-              fallProcess(positive_votes, negative_votes, msg);
+              fallProcess(positive_votes, negative_votes, message_command);
               break;
             case "kick":
-              kickProcess(positive_votes, negative_votes);
+              kickProcess(positive_votes, negative_votes, message_command);
               break;
             case "ban":
-              banProcess(positive_votes, negative_votes);
+              banProcess(positive_votes, negative_votes, message_command);
               break;
           }
         } else if (positive_votes.count < negative_votes.count) {
-          stopProcessLess(positive_votes, negative_votes);
+          stopProcessLess(positive_votes, negative_votes, message_command);
         } else if (positive_votes.count === negative_votes.count) {
-          stopProcessEqual(positive_votes, negative_votes);
+          stopProcessEqual(positive_votes, negative_votes, message_command);
         }
       } catch (err) {
         console.log(err);
@@ -910,7 +909,7 @@ function conflictConfirmation(msg, conflict_id_str, punishment) {
     });
   });
 
-  function stopProcessEqual(positive_votes, negative_votes) {
+  function stopProcessEqual(positive_votes, negative_votes, msg) {
     conflict_model.findByIdAndUpdate(
       conflict_id_str,
       {
@@ -929,7 +928,7 @@ function conflictConfirmation(msg, conflict_id_str, punishment) {
     );
   }
 
-  function stopProcessLess(positive_votes, negative_votes) {
+  function stopProcessLess(positive_votes, negative_votes, msg) {
     conflict_model.findByIdAndUpdate(
       conflict_id_str,
       {
@@ -968,35 +967,34 @@ class Process{
             (err, channel) => {
               if (err) throw err;
               console.log(channel);
+              let user_lawbreaker = message.mentions.members.first()
               let falls = JSON.parse(channel.falls)
-              falls[conflict.lawbreaker] = (falls[conflict.lawbreaker] || 0) + 1
-              channel.falls = JSON.stringify(falls)
-              let user_lawbreaker = message.mentions.members.first().user
-              guild.channels.cache.get(conflict.channel).send(
+              falls[user_lawbreaker.user.id] = (falls[user_lawbreaker.user.id] || 0) + 1
+              message.channel.send(
               "@everyone Внимание! По конфликту №`" +
               conflict_id_str +
                   "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" +
-                  user_lawbreaker.username +
+                  user_lawbreaker.user.username +
                   "`;\n На данный момент у `" +
-                  user_lawbreaker.username +
+                  user_lawbreaker.user.username +
                   "` `" +
-                  falls[channel.lawbreaker] +
+                  falls[user_lawbreaker.user.id] +
                   "` фолл(а);"
               );
-                  if (falls[conflict.lawbreaker] >= 3) {
+                  if (falls[user_lawbreaker.user.id] >= 3) {
                     if (user_lawbreaker.kickable === false) {
-                      guild.channels.cache.get(conflict.channel).send(
+                      message.channel.send(
                         "ERROR: USER ISN'T KICKABLE. HIS FALLS: `" +
-                          falls[conflict.lawbreaker] +
+                          falls[user_lawbreaker.user.id] +
                           "`\nномер конфликта: `" +
                           conflict_id_str +
                           "`"
                       );
                     } else {
-                      falls[conflict.lawbreaker] = 0
-                      msg.channel.send(
+                      delete falls[user_lawbreaker.user.id]
+                      message.channel.send(
                         "Пользователь `" +
-                          user_lawbreaker.username +
+                          user_lawbreaker.user.username +
                           "` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `" +
                           conflict_id_str +
                           "`), а значит суд изгоняет его из сервера! GOODBYE!"
@@ -1004,6 +1002,7 @@ class Process{
                       user_lawbreaker.kick();
                     }
                   }
+                  channel.falls = JSON.stringify(falls)
                   channel.save()
                 })
               
@@ -1013,7 +1012,7 @@ class Process{
     );
   }
 
-  function kickProcess(positive_votes, negative_votes) {
+  function kickProcess(positive_votes, negative_votes, msg) {
     conflict_model.findByIdAndUpdate(
       conflict_id_str,
       {
@@ -1023,9 +1022,7 @@ class Process{
       },
       (err, conflict) => {
         if (err) throw err;
-        let user_lawbreaker = msg.guild.members.cache.get(
-          conflict.lawbreaker.toString()
-        );
+        let user_lawbreaker = msg.mentions.first()
         if (user_lawbreaker.kickable === false) {
           msg.channel.send(
             "ERROR: USER ISN'T KICKABLE\nномер конфликта: `" +
@@ -1046,7 +1043,7 @@ class Process{
     );
   }
 
-  function banProcess(positive_votes, negative_votes) {
+  function banProcess(positive_votes, negative_votes, msg) {
     conflict_model.findByIdAndUpdate(
       conflict_id_str,
       {
@@ -1056,9 +1053,7 @@ class Process{
       },
       (err, conflict) => {
         if (err) throw err;
-        let user_lawbreaker = msg.guild.members.cache.get(
-          conflict.lawbreaker.toString()
-        );
+        let user_lawbreaker = msg.mentions.members.first()
         msg.channel.send(
           "@everyone Внимание! По конфликту №`" +
             conflict_id_str +

@@ -890,7 +890,7 @@ function conflictConfirmation(msg, conflict_id_str, punishment) {
         if (positive_votes.count > negative_votes.count) {
           switch (punishment) {
             case "fall":
-              fallProcess(positive_votes, negative_votes);
+              fallProcess(positive_votes, negative_votes, msg);
               break;
             case "kick":
               kickProcess(positive_votes, negative_votes);
@@ -951,7 +951,7 @@ function conflictConfirmation(msg, conflict_id_str, punishment) {
 class Process{
 
 }
-  function fallProcess(positive_votes, negative_votes) {
+  function fallProcess(positive_votes, negative_votes, message) {
     conflict_model.findByIdAndUpdate(
       conflict_id_str,
       {
@@ -971,22 +971,18 @@ class Process{
               let falls = JSON.parse(channel.falls)
               falls[conflict.lawbreaker] = (falls[conflict.lawbreaker] || 0) + 1
               channel.falls = JSON.stringify(falls)
-              client.guilds.fetch(conflict.guild).then((guild)=>{
-                guild.members.fetch(
-                  conflict.lawbreaker
-                ).then((member)=>{
-                  let user_lawbreaker = member.user
-                  guild.channels.cache.get(conflict.channel).send(
-                    "@everyone Внимание! По конфликту №`" +
-                      conflict_id_str +
-                      "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" +
-                      user_lawbreaker.user.username +
-                      "`;\n На данный момент у `" +
-                      user_lawbreaker.user.username +
-                      "` `" +
-                      falls[channel.lawbreaker] +
-                      "` фолл(а);"
-                  );
+              let user_lawbreaker = message.mentions.members.first().user
+              guild.channels.cache.get(conflict.channel).send(
+              "@everyone Внимание! По конфликту №`" +
+              conflict_id_str +
+                  "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" +
+                  user_lawbreaker.username +
+                  "`;\n На данный момент у `" +
+                  user_lawbreaker.username +
+                  "` `" +
+                  falls[channel.lawbreaker] +
+                  "` фолл(а);"
+              );
                   if (falls[conflict.lawbreaker] >= 3) {
                     if (user_lawbreaker.kickable === false) {
                       guild.channels.cache.get(conflict.channel).send(
@@ -1000,7 +996,7 @@ class Process{
                       falls[conflict.lawbreaker] = 0
                       msg.channel.send(
                         "Пользователь `" +
-                          user_lawbreaker.user.username +
+                          user_lawbreaker.username +
                           "` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `" +
                           conflict_id_str +
                           "`), а значит суд изгоняет его из сервера! GOODBYE!"
@@ -1010,11 +1006,9 @@ class Process{
                   }
                   channel.save()
                 })
-              })
               
             }
           );
-        });
       }
     );
   }

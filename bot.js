@@ -632,7 +632,8 @@ async function giveScores(message) {
   });
 }
 
-async function giveFall(message){
+async function giveFall(lawbreaker_member, guild_id){
+  return new Promise(resolve => {
   mongoose.set("useFindAndModify", true);
   mongoose.set("useNewUrlParser", true);
   mongoose.set("useUnifiedTopology", true);
@@ -641,17 +642,25 @@ async function giveFall(message){
   mongoose.connection.db.collection("channels", (err) => {
     if (err)
     throw err;
-    let authors_id = message.author.id.toString();
-    channel_model.findOne({ ds_id: message.guild.id }, (err, channel) => {
+    let lawbreaker = lawbreaker_member;
+    channel_model.findOne({ ds_id: guild_id}, (err, channel) => {
         if (err) throw err
-        let obj = JSON.parse(channel.falls);
-        obj[authors_id] = (obj[authors_id] || 0) + 1;
-        channel.falls = JSON.stringify(obj);
+        let falls_obj = JSON.parse(channel.falls);
+        falls_obj[lawbreaker.user.id] = (falls_obj[lawbreaker.user.id] || 0) + 1;
+        is_kicked = false
+        if(falls_obj[lawbreaker.user.id] >= 3){
+          lawbreaker.kick().then(()=>{
+            is_kicked == true
+            delete falls_obj[lawbreaker.user.id]
+          })
+        }
+        channel.falls = JSON.stringify(falls_obj);
         channel.save().then(()=>{
-          message.reply("FG")
+          resolve((falls_obj[lawbreaker.user.id] || 0), is_kicked)
         })
     })
   })
+})
 })
 }
 
@@ -745,7 +754,7 @@ async function antiSpamDefender(message){
   message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasWordsRepeat + isGreaterThanLimit + hasPings + hasLetterRepeat
   console.log("amount:" + message_amount[memberPath])
   if(clearMsg !==undefined) clearTimeout(clearMsg)
-  clearMsg = setTimeout(clearMessageAmount, 1100, message)
+  clearMsg = setTimeout(clearMessageAmount, 1000 + (hasPreviousRepeat * 650) + (isGreaterThanLimit * 550) + (hasPings * 650), message)
   if(message_amount[memberPath] >= 5){
     message.reply("You should stop!")
     warnings_amount[memberPath] = (warnings_amount[memberPath] || 0) + 1
@@ -967,39 +976,40 @@ class Process{
             (err, channel) => {
               if (err) throw err;
               console.log(channel);
-              let user_lawbreaker = message.mentions.members.first()
+              let member_lawbreaker = message.mentions.members.first()
+              giveFall(member_lawbreaker)
               let falls = JSON.parse(channel.falls)
-              falls[user_lawbreaker.user.id] = (falls[user_lawbreaker.user.id] || 0) + 1
+              falls[member_lawbreaker.user.id] = (falls[member_lawbreaker.user.id] || 0) + 1
               message.channel.send(
               "@everyone Внимание! По конфликту №`" +
               conflict_id_str +
                   "` было вынесено решение в пользу пожаловавшегося!\nРешение: `fall` для `" +
-                  user_lawbreaker.user.username +
+                  member_lawbreaker.user.username +
                   "`;\n На данный момент у `" +
-                  user_lawbreaker.user.username +
+                  member_lawbreaker.user.username +
                   "` `" +
-                  falls[user_lawbreaker.user.id] +
+                  falls[member_lawbreaker.user.id] +
                   "` фолл(а);"
               );
-                  if (falls[user_lawbreaker.user.id] >= 3) {
-                    if (user_lawbreaker.kickable === false) {
+                  if (falls[member_lawbreaker.user.id] >= 3) {
+                    if (member_lawbreaker.kickable === false) {
                       message.channel.send(
                         "ERROR: USER ISN'T KICKABLE. HIS FALLS: `" +
-                          falls[user_lawbreaker.user.id] +
+                          falls[member_lawbreaker.user.id] +
                           "`\nномер конфликта: `" +
                           conflict_id_str +
                           "`"
                       );
                     } else {
-                      delete falls[user_lawbreaker.user.id]
+                      delete falls[member_lawbreaker.user.id]
                       message.channel.send(
                         "Пользователь `" +
-                          user_lawbreaker.user.username +
+                          member_lawbreaker.user.username +
                           "` Набрал МАКСИМУМ фоллов(в связи с последним конфликтом номер `" +
                           conflict_id_str +
                           "`), а значит суд изгоняет его из сервера! GOODBYE!"
                       );
-                      user_lawbreaker.kick();
+                      member_lawbreaker.kick();
                     }
                   }
                   channel.falls = JSON.stringify(falls)
@@ -1022,8 +1032,8 @@ class Process{
       },
       (err, conflict) => {
         if (err) throw err;
-        let user_lawbreaker = msg.mentions.first()
-        if (user_lawbreaker.kickable === false) {
+        let member_lawbreaker = msg.mentions.members.first()
+        if (member_lawbreaker.kickable === false) {
           msg.channel.send(
             "ERROR: USER ISN'T KICKABLE\nномер конфликта: `" +
               conflict_id_str +
@@ -1034,10 +1044,10 @@ class Process{
             "@everyone Внимание! По конфликту №`" +
               conflict_id_str +
               "` было вынесено решение в пользу пожаловавшегося!\nРешение: `kick` для `" +
-              user_lawbreaker.user.username +
+              member_lawbreaker.user.username +
               "`"
           );
-          user_lawbreaker.kick();
+          member_lawbreaker.kick();
         }
       }
     );
@@ -1053,16 +1063,16 @@ class Process{
       },
       (err, conflict) => {
         if (err) throw err;
-        let user_lawbreaker = msg.mentions.members.first()
+        let member_lawbreaker = msg.mentions.members.first()
         msg.channel.send(
           "@everyone Внимание! По конфликту №`" +
             conflict_id_str +
             "` было вынесено решение в пользу пожаловавшегося!\nРешение: `ban` для `" +
-            user_lawbreaker.user.username +
+            member_lawbreaker.user.username +
             "`\n*(start process...)*"
         );
         try {
-          user_lawbreaker.ban();
+          member_lawbreaker.ban();   
           msg.channel.send(
             "Процесс бана по конфликту номер `" +
               conflict_id_str +

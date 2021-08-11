@@ -30,6 +30,7 @@ client.on("message", (msg)=>{
         case "b!verify":
             msg.guild.roles.fetch("870948025286156308").then((role)=>{
                 msg.member.roles.add(role).then(()=>{
+                    msg.guild.channels.cache.get("804772492978946092").send("***Добро пожаловать на наш уютный сервер!*** Теперь можешь початиться :old_logo:")
                     msg.react("✅")
                 })
             })

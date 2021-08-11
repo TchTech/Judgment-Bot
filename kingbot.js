@@ -8,29 +8,37 @@ client.on("ready", ()=>{
     client.user.setActivity("Пропишите b!games")
 })
 
-client.on("messageReactionAdd", (reaction, user)=>{
-    if(reaction.emoji.name == "✅" && reaction.message.author.id == "274930301917069313" && reaction.message.content == "Поставьте галочку для верификации, если вы знаете и согласны с правилами сервера."){
-        reaction.message.guild.roles.fetch("870948025286156308").then((role)=>{
-            reaction.message.guild.members.fetch(user.id).then((member)=>{
-                member.roles.add(role)
-            })
-        })
-    }
-})
+// client.on("messageReactionAdd", (reaction, user)=>{
+//     if(reaction.emoji.name == "✅" && reaction.message.author.id == "274930301917069313" && reaction.message.content == "Поставьте галочку для верификации, если вы знаете и согласны с правилами сервера."){
+        
+//     }
+// })
 
-client.on("messageReactionRemove", (reaction, user)=>{
-    if(reaction.emoji.name == "✅" && reaction.message.author.id == "274930301917069313" && reaction.message.content == "Поставьте галочку для верификации, если вы знаете и согласны с правилами сервера."){
-        reaction.message.guild.roles.fetch("870948025286156308").then((role)=>{
-            reaction.message.guild.members.fetch(user.id).then((member)=>{
-                member.roles.remove(role)
-            })
-        })
-    }
-})
+// client.on("messageReactionRemove", (reaction, user)=>{
+//     if(reaction.emoji.name == "✅" && reaction.message.author.id == "274930301917069313" && reaction.message.content == "Поставьте галочку для верификации, если вы знаете и согласны с правилами сервера."){
+//         reaction.message.guild.roles.fetch("870948025286156308").then((role)=>{
+//             reaction.message.guild.members.fetch(user.id).then((member)=>{
+//                 member.roles.remove(role)
+//             })
+//         })
+//     }
+// })
 
 client.on("message", (msg)=>{
     console.log(msg.guild.roles)
     switch(msg.content.split(" ")[0]){
+        case "b!verify":
+            msg.guild.roles.fetch("870948025286156308").then((role)=>{
+                msg.member.roles.add(role).then(()=>{
+                    msg.reply("***Добро пожаловать на наш уютный сервер!*** Теперь можешь початиться))")
+                })
+            })
+        break
+        // case "b!deleteverify":
+        //     msg.guild.roles.fetch("870948025286156308").then((role)=>{
+        //         msg.member.roles.remove(role)
+        //     })
+        // break
         case "b!games":
             msg.reply("Спасибо что спросили! На данный момент доступны эти роли:\n`b!dwarf`: **Dwarf-Fortress-Gamer**;\n`b!rust`: **Rust-Gamer**;\n`b!roblox`: **Roblox-Gamer**;\n`b!starve`: **Dont-Starve-Gamer**;\n`b!minecraft`: **Minecraft-Gamer**;\n`b!amongus`: **Amongus-Gamer**;\n`b!terraria`: **Terraria-Gamer**;\n`b!nintendo`: **NINTENDO-Gamer**;\n`b!gta`: **GTA-Gamer**;\n`b!wot`: **WOT-Gamer**;\n`b!csgo`: **Counter-Strike-Gamer**;\n`b!pubg`: **PUBG-Gamer**;\n")
             break

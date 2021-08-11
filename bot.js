@@ -297,8 +297,8 @@ client.on("message", (message) => {
                   m.react("👎");
                   try {
                     setTimeout(
-                      /*43200000*/ conflictConfirmation,
-                      7200,
+                      conflictConfirmation,
+                      7200000,
                       m,
                       conflict_id._id.toHexString(),
                       conflicts[message.mentions.members.first()].punishment,
@@ -656,7 +656,33 @@ async function giveFall(lawbreaker_member, guild_id){
         }
         channel.falls = JSON.stringify(falls_obj);
         channel.save().then(()=>{
+          setTimeout(clearFalls, 10800000, lawbreaker, guild_id)
           resolve((falls_obj[lawbreaker.user.id] || 0), is_kicked)
+        })
+    })
+  })
+})
+})
+}
+
+async function clearFalls(lawbreaker_member, guild_id){
+  return new Promise(resolve => {
+  mongoose.set("useFindAndModify", true);
+  mongoose.set("useNewUrlParser", true);
+  mongoose.set("useUnifiedTopology", true);
+  mongoose.connect(mongo_uri, (err) => {
+  if (err) throw err;
+  mongoose.connection.db.collection("channels", (err) => {
+    if (err)
+    throw err;
+    let lawbreaker = lawbreaker_member;
+    channel_model.findOne({ ds_id: guild_id}, (err, channel) => {
+        if (err) throw err
+        let falls_obj = JSON.parse(channel.falls);
+        delete falls_obj[lawbreaker.user.id]
+        channel.falls = JSON.stringify(falls_obj);
+        channel.save().then(()=>{
+          resolve()
         })
     })
   })

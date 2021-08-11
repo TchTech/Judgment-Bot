@@ -30,7 +30,7 @@ client.on("message", (msg)=>{
         case "b!verify":
             msg.guild.roles.fetch("870948025286156308").then((role)=>{
                 msg.member.roles.add(role).then(()=>{
-                    msg.reply("***Добро пожаловать на наш уютный сервер!*** Теперь можешь початиться))")
+                    msg.react("✅")
                 })
             })
         break

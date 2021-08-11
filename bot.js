@@ -754,12 +754,16 @@ async function antiSpamDefender(message){
   message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasWordsRepeat + isGreaterThanLimit + hasPings + hasLetterRepeat
   console.log("amount:" + message_amount[memberPath])
   if(clearMsg !==undefined) clearTimeout(clearMsg)
-  clearMsg = setTimeout(clearMessageAmount, 1000 + (hasPreviousRepeat * 650) + (isGreaterThanLimit * 550) + (hasPings * 650), message)
+  clearMsg = setTimeout(clearMessageAmount, 1300 + (hasPreviousRepeat * 550) + (isGreaterThanLimit * 300) + (hasPings * 430), message)
   if(message_amount[memberPath] >= 5){
-    message.reply("You should stop!")
+    message.reply("**SPAM DETECTION!** *Please, stop! Or you will have falls!*")
     warnings_amount[memberPath] = (warnings_amount[memberPath] || 0) + 1
     if(warnings_amount[memberPath] == 2){
-      
+      giveFall(message.member, message.guild.id).then((falls_number, is_kicked)=>{
+      is_kicked? message.reply(message.author.username + " was kicked because of spamming!") : message.reply(message.author.username + " has " + falls_number + " fall(s). As for me, you should stop!"
+      )
+      message.delete()
+      })
     }
   }
 }

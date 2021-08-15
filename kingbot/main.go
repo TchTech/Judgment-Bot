@@ -31,7 +31,7 @@ func main() {
 
 	// Register the messageCreate func as a callback for MessageCreate events.
 	dg.AddHandler(messageCreate)
-
+	dg.AddHandler(setActivity)
 	// In this example, we only care about receiving message events.
 	dg.Identify.Intents = discordgo.IntentsGuildMessages
 
@@ -44,12 +44,19 @@ func main() {
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
-
 	// Cleanly close down the Discord session.
 	dg.Close()
+}
+
+func setActivity(s *discordgo.Session, r *discordgo.Ready) {
+	err := s.UpdateListeningStatus("Пропишите b!games;")
+	if err != nil {
+		panic(err)
+	}
 }
 
 // This function will be called (due to AddHandler above) every time a new
@@ -75,8 +82,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			s.ChannelMessageSendReply(m.ChannelID, "У вас нет прав.", m.Reference())
 		}
-	}
-	if m.Content == "b!games" {
+	} else if m.Content == "b!games" {
 		var message_array []string
 		for command := range roles_map {
 			for index := range roles {
@@ -88,33 +94,41 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		message_array = append([]string{"Спасибо что спросили! На данный момент доступны эти роли:"}, message_array...)
 		message := strings.Join(message_array, "\n")
 		s.ChannelMessageSendReply(m.ChannelID, message, m.Reference())
-	}
-	for command := range roles_map {
-		if m.Content == command {
-			err := s.GuildMemberRoleAdd(m.GuildID, m.Author.ID, roles_map[command])
-			if err != nil {
-				panic(err)
+	} else if m.Content == "b!verify" {
+		members_role := m.Member.Roles
+		for role_index := range members_role {
+			if members_role[role_index] == "870948025286156308" {
+				break
 			}
-			var role_name string
-			for index := range roles { //Search for need role and get its name.
-				if roles[index].ID == roles_map[command] {
-					role_name = roles[index].Name
+		}
+		err := s.GuildMemberRoleAdd(m.GuildID, m.Author.ID, "870948025286156308")
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, "Невозможно выдать роль.")
+			panic(err)
+		}
+		s.MessageReactionAdd(m.ChannelID, m.ID, "✅")
+		_, err = s.ChannelMessageSend("804772492978946092", "***Добро пожаловать на наш уютный сервер, "+m.Author.Username+"!*** Теперь можешь початиться :wink:")
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		for command := range roles_map {
+			if m.Content == command {
+				err := s.GuildMemberRoleAdd(m.GuildID, m.Author.ID, roles_map[command])
+				if err != nil {
+					panic(err)
 				}
+				var role_name string
+				for index := range roles { //Search for need role and get its name.
+					if roles[index].ID == roles_map[command] {
+						role_name = roles[index].Name
+					}
+				}
+				if err != nil {
+					panic(err)
+				}
+				s.ChannelMessageSend(m.ChannelID, "Вы получили роль `"+role_name+"`. Теперь вы имеете доступ к **Эксклюзивной игровой категории!**\n*Спасибо за использование нашего сервиса!*")
 			}
-			if err != nil {
-				panic(err)
-			}
-			s.ChannelMessageSend(m.ChannelID, "Вы получили роль `"+role_name+"`. Теперь вы имеете доступ к **Эксклюзивной игровой категории!**\n*Спасибо за использование нашего сервиса!*")
 		}
 	}
-
-	// If the message is "ping" reply with "Pong!"
-	// if m.Content == "b!amo" {
-	// 	s.ChannelMessageSend(m.ChannelID, "Pong!")
-	// }
-
-	// // If the message is "pong" reply with "Ping!"
-	// if m.Content == "pong" {
-	// 	s.ChannelMessageSend(m.ChannelID, "Ping!")
-	// }
 }

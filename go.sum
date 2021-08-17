@@ -2,5 +2,9 @@ github.com/bwmarrin/discordgo v0.23.2 h1:BzrtTktixGHIu9Tt7dEE6diysEF9HWnXeHuoJEt
 github.com/bwmarrin/discordgo v0.23.2/go.mod h1:c1WtWUGN6nREDmzIpyTp/iD3VYt4Fpx+bVyfBG7JE+M=
 github.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=
 github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
+github.com/jgranstrom/go-simplejson v0.0.0-20130401154024-1c4a2a70d0b5 h1:iI79wMCvcQbJj8i+47eGHg3Nt5zbZKMocOsx4EDkJhg=
+github.com/jgranstrom/go-simplejson v0.0.0-20130401154024-1c4a2a70d0b5/go.mod h1:3OJBwwdhp/IjI2pZFkT9mGXYRAzXIv7cZmcRdO6+zqw=
+github.com/jgranstrom/gonodepkg v0.0.0-20151201121031-af29c3d9abcd h1:ULJKCoyFHZrWWOpfoP7yd83R4rlxSTBXtq+IczlAn2A=
+github.com/jgranstrom/gonodepkg v0.0.0-20151201121031-af29c3d9abcd/go.mod h1:D7fEG00C50Q+2DK7oQ4VyK5RvaXZKIK3juRr+vC9rlY=
 golang.org/x/crypto v0.0.0-20181030102418-4d3f4d9ffa16 h1:y6ce7gCWtnH+m3dCjzQ1PCuwl28DDIc3VNnvY29DlIA=
 golang.org/x/crypto v0.0.0-20181030102418-4d3f4d9ffa16/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=

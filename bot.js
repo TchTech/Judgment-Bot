@@ -18,7 +18,11 @@ const channel_model = require("./channel_model");
 var added_users_ids = [];
 var added_channels_ids = [];
 const getAddedUsers = require("./src/getAddedUsers").getAddedUsers
-const { exec } = require('child_process');
+//const { exec } = require('child_process');
+var Go = require('gonode').Go;
+var go = new Go({
+    path  : 'kingbot_go.go',
+});
 const getAddedChannels = require("./src/getAddedChannels").getAddedChannels;
 // const { exception } = require("console");
 var message_amount = {}
@@ -28,7 +32,7 @@ const bot_logo = "https://cdn.discordapp.com/avatars/799723410572836874/51e3f977
 
 // const output = execSync('node kingbot.js', { encoding: 'utf-8' });
 // async()=>{
-exec("kingbot_go")
+exec("./king_linux")
 // }
 // console.log('The output is:');
 // console.log(output);

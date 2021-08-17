@@ -12,6 +12,7 @@
     "discord-slash-commands-client": "^1.2.1",
     "discord.js": "12.5.1",
     "express": "^4.17.1",
+    "gonode": "^0.1.2",
     "moment": "^2.29.1",
     "mongoose": "^5.11.14",
     "mysql2": "^2.2.5",

@@ -28,7 +28,7 @@ const bot_logo = "https://cdn.discordapp.com/avatars/799723410572836874/51e3f977
 
 // const output = execSync('node kingbot.js', { encoding: 'utf-8' });
 // async()=>{
-exec(".\kingbot_go")
+exec("kingbot_go")
 // }
 // console.log('The output is:');
 // console.log(output);

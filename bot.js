@@ -19,10 +19,10 @@ var added_users_ids = [];
 var added_channels_ids = [];
 const getAddedUsers = require("./src/getAddedUsers").getAddedUsers
 //const { exec } = require('child_process');
-var Go = require('gonode').Go;
-var go = new Go({
-    path  : 'kingbot_go.go',
-});
+// var Go = require('gonode').Go;
+// var go = new Go({
+//     path  : 'kingbot_go.go',
+// });
 const getAddedChannels = require("./src/getAddedChannels").getAddedChannels;
 // const { exception } = require("console");
 var message_amount = {}

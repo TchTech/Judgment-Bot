@@ -1,4 +1,4 @@
-data/
+data/config.json
 # Logs
 logs
 *.log

@@ -24,7 +24,14 @@ const { exception } = require("console");
 var message_amount = {}
 var previous_messages = {}
 const bot_logo = "https://cdn.discordapp.com/avatars/799723410572836874/51e3f97734ef1259f4587e7eba719cf1.png?size=128"
-
+var right_ways = {}
+var enemy_pos = {}
+var enemy_rounds = {}
+var enemyGame = require("./src/enemyGame")
+var tacticalGame = require("./src/tacticalGame")
+const disbut = require("discord-buttons");
+var tactic_cooldown = {}
+disbut(client);
 
 // const output = execSync('node kingbot.js', { encoding: 'utf-8' });
 
@@ -68,20 +75,32 @@ const sleep = (milliseconds) => {
 /*TODO: DISCORD BUTTONS ON CONFLICTS
 TODO:   RATING FIX
 TODO:   BOTTER.PY;
+        
+
         B!OPTION;
+        
+
         HELP FIX;
         ========
-        FALLS REFORMATION;
+        +FALLS REFORMATION;
         ==========
         FASTER RATING;
         ONLY ONE DB CONNECT;
         CHANNEL ADDING LINKE USRS; +
+        
+
         LOGS;
+        
+
         TRY-CATCH; +
         +SITE;
         +SEASONS;
         +GAME-ROLES;
+        
+
         LANGUAGE MODES;
+
+
         README.MD;
         +TYPING;
         TESTS;
@@ -422,9 +441,182 @@ client.on("message", (message) => {
       case commands.en_help:
         message.reply(help_messages["eng-help-msg"]);
         break;
+      case commands.work:
+        let pos = randomNumber(1, 6)
+        let i = 1
+        let ways_arr = []
+        const pos_emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
+        while(i <=5){
+          if(pos == i) ways_arr.push(pos_emojis[i-1] + "--🌳")
+          else ways_arr.push(pos_emojis[i-1] + "--💥")
+          i += 1
+        }
+        let memberPath = message.guild.id + ":" + message.author.id
+        right_ways[memberPath] = pos
+        i = 0
+        let first_option = new disbut.MessageMenuOption()
+            .setLabel('First way')
+            .setEmoji('1️⃣')
+            .setValue('1_way')
+        let second_option = new disbut.MessageMenuOption()
+            .setLabel('Second way')
+            .setEmoji('2️⃣')
+            .setValue('2_way')
+        let third_option = new disbut.MessageMenuOption()
+            .setLabel('Third way')
+            .setEmoji('3️⃣')
+            .setValue('3_way')
+        let fourth_option = new disbut.MessageMenuOption()
+            .setLabel('Fourth way')
+            .setEmoji('4️⃣')
+            .setValue('4_way')    
+        let fifth_option = new disbut.MessageMenuOption()
+            .setLabel('Fifth way')
+            .setEmoji('5️⃣')
+            .setValue('5_way')
+        let way_select = new disbut.MessageMenu()
+            .setID('work_ways')
+            .setPlaceholder('Click me! :D')
+            .setMaxValues(1)
+            .setMinValues(1)
+            .addOptions(first_option, second_option, third_option, fourth_option, fifth_option)
+        message.channel.send(ways_arr.join("\n") + "\nВыберите безопасный путь в меню.", way_select)
+        setTimeout(workClose, 10000, memberPath, message.channel)
+        break
+      case "b!tactic":
+      console.log(tactic_cooldown[message.guild.id +":"+ message.author.id])
+      if(!tactic_cooldown[message.guild.id +":"+ message.author.id]){
+      let tactic = new tacticalGame.tacticalFight(message, "tactic_id", message.author.id, "**Правила тактики:** Вы должны уничтожить все щиты, но при этом вам нельзя стрелять в бойцов. Бомбы уничтожают ближайшие позиции. Поспешите, пока таймер не вышел.", "Великолепно! Продолжай!", "Упс... Вы проиграли.", "Молодец! Ты победил!", mongo_uri)
+      tactic.tacticalFightProcess(tactic.game_field_arr)
+      client.on("clickMenu", (menu)=>{
+        tactic.enemyMenuListener(menu)
+      })
+      tactic_cooldown[message.guild.id +":"+ message.author.id] = 1
+      setTimeout(clearTacticCooldown, 1800000, message.guild.id +":"+ message.author.id)
+    }else{
+      message.reply("У тебя все еще кулдаун...")
+    }
+      break
+      // case "b!defend":  
+      // var game = new enemyGame(message, "air_menu", ["1_pos_air", "2_pos_air", "3_pos_air", "4_pos_air", "5_pos_air"], message.author.id, "✈", "🚁", "🌩", "Уничтожьте вражеский вертолет!", "Правильно, продолжайте!", "Неверно!", "Молодец! Победа!" )
+      // game.enemyFightProcess()
+      // client.on("clickMenu", (menu)=>{
+      //   game.enemyMenuListener(menu)
+
+
+
+
+//         const ways = ["1_way", "2_way", "3_way", "4_way", "5_way"]
+//   if(menu.values[0] === "1_way" || menu.values[0] === "2_way" || menu.values[0] === "3_way" || menu.values[0] === "4_way" || menu.values[0] === "5_way"){
+//     let memberPath = menu.guild.id + ":" + menu.clicker.id
+//     if(right_ways[memberPath] !== undefined) {
+//     let index = ways.indexOf(menu.values[0])
+//       if(right_ways[memberPath] === index+1){
+//         menu.message.channel.send("**Правильно!** Ваш ответ принят.")
+//         menu.reply.defer()
+//       }else{
+//         menu.message.channel.send("**Неправильно!** Сбор ответов закочен.")
+//         menu.reply.defer()
+//       }
+//     delete right_ways[memberPath]
+//   }
+// } 
+
+
+      // })
+      // break
     }
   }
 });
+
+// var fightTimeout
+
+// async function enemyFight(message, author_id){
+//   let pos = randomNumber(1, 6)
+//         let i = 1
+//         let pos_arr = []
+//         const pos_emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
+//         while(i <=5){
+//           if(pos == i) pos_arr.push(pos_emojis[i-1] + "✈--🚁")
+//           else pos_arr.push(pos_emojis[i-1] + "✈--🌩")
+//           i += 1
+//         }
+//         let memberPath = message.guild.id + ":" + author_id
+//         enemy_pos[memberPath] = pos
+//         i = 0
+//         let first_option = new disbut.MessageMenuOption()
+//             .setLabel('First position')
+//             .setEmoji('1️⃣')
+//             .setValue('1_pos')
+//         let second_option = new disbut.MessageMenuOption()
+//             .setLabel('Second position')
+//             .setEmoji('2️⃣')
+//             .setValue('2_pos')
+//         let third_option = new disbut.MessageMenuOption()
+//             .setLabel('Third position')
+//             .setEmoji('3️⃣')
+//             .setValue('3_pos')
+//         let fourth_option = new disbut.MessageMenuOption()
+//             .setLabel('Fourth position')
+//             .setEmoji('4️⃣')
+//             .setValue('4_pos')    
+//         let fifth_option = new disbut.MessageMenuOption()
+//             .setLabel('Fifth position')
+//             .setEmoji('5️⃣')
+//             .setValue('5_pos')
+//         let pos_select = new disbut.MessageMenu()
+//             .setID('enemy_pos')
+//             .setPlaceholder('Click me! :D')
+//             .setMaxValues(1)
+//             .setMinValues(1)
+//             .addOptions(first_option, second_option, third_option, fourth_option, fifth_option)
+//         message.channel.send(pos_arr.join("\n") + "\nВыберите позицию вражеского вертолета!", pos_select)
+//         fightTimeout = setTimeout(enemyClose, 10000, memberPath, message.channel)
+// }
+// else if(menu.values[0] === "1_pos" || menu.values[0] === "2_pos" || menu.values[0] === "3_pos" || menu.values[0] === "4_pos" || menu.values[0] === "5_pos"){
+//   let memberPath = menu.guild.id + ":" + menu.clicker.id
+//     if(enemy_pos[memberPath] !== undefined) {
+//     let index = poses.indexOf(menu.values[0])
+//       if(enemy_pos[memberPath] === index+1){
+//         menu.message.channel.send("**Правильно!** Ваш ответ принят.")
+//         enemy_rounds[memberPath] = (enemy_rounds[memberPath] || 0) + 1
+//         if(enemy_rounds[memberPath] >= 4){
+//           enemyClose(memberPath, menu.message.channel)
+//           clearTimeout(fightTimeout)
+//           menu.message.channel.send("**Вы победили!**")
+//         }else{
+//           delete enemy_pos[memberPath]
+//           clearTimeout(fightTimeout)
+//           enemyFight(menu.message, menu.clicker.id)
+//         }
+//         menu.reply.defer()
+//         menu.message.delete()
+//       }else{
+//         menu.message.channel.send("**Неправильно!** Сбор ответов закочен.")
+//         enemyClose(memberPath, menu.message.channel)
+//         menu.reply.defer()
+//       }
+//   }
+// }
+
+async function clearTacticCooldown(memberPath){
+  delete tactic_cooldown[memberPath]
+}
+
+async function workClose(memberPath, channel){
+    if(right_ways[memberPath] !== undefined){
+    delete right_ways[memberPath]
+    channel.send("Прием ответов закрыт!")
+  }
+}
+
+// async function enemyClose(memberPath, channel){
+//     if(enemy_pos[memberPath] !== undefined){
+//     delete enemy_pos[memberPath]
+//     if(enemy_rounds[memberPath] !== undefined) delete enemy_rounds[memberPath]
+//     channel.send("Прием ответов закрыт!")
+//   }
+// }
 
 // var season = cron.schedule('0 0 30 * *', () => {
 //   updateGuilds();
@@ -779,7 +971,7 @@ async function antiSpamDefender(message){
   message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasWordsRepeat + isGreaterThanLimit + hasPings + hasLetterRepeat
   console.log("amount:" + message_amount[memberPath])
   if(clearMsg !==undefined) clearTimeout(clearMsg)
-  clearMsg = setTimeout(clearMessageAmount, 1150 + (hasPreviousRepeat * 550) + (isGreaterThanLimit * 300) + (hasPings * 430), message)
+  clearMsg = setTimeout(clearMessageAmount, 1300 + (hasPreviousRepeat * 400) + (isGreaterThanLimit * 200) + (hasPings * 370), message)
   if(message_amount[memberPath] >= 5){
     message.reply("**SPAM DETECTION!** *Please, stop! Or you will have falls!*")
     warnings_amount[memberPath] = (warnings_amount[memberPath] || 0) + 1

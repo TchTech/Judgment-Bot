@@ -5,6 +5,7 @@ _id: mongoose.Schema.Types.ObjectId,
 	nickname: String,
 	ds_id: String,
 	falls: Number,
+	servonces: Number,
 	conficts_member: Array,
 	profile_picture: String,
 	created: { 

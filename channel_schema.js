@@ -4,6 +4,7 @@ var channelSchema = mongoose.Schema({
 _id: mongoose.Schema.Types.ObjectId,
 	name: String,
 	ds_id: String,
+	servonces: Number,
 	falls: {
 		type: String,
 		default: "{}"

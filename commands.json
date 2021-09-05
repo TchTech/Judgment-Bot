@@ -10,5 +10,7 @@
     "introducing": "b!hi",
     "score": "b!score",
     "birthday": "b!birthday",
-    "rating":"b!rating"
+    "rating":"b!rating",
+    "war": "b!war",
+    "work": "b!work"
 }

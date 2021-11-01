@@ -15,9 +15,8 @@ function randomNumber(min, max) {
 //   var result_arr = emojiGenerate(shields, bombs, warriors);
 //   console.log(result_arr.join(""))
 //   console.log()
-  function emojiGenerate(shields, bombs, warriors) {
+  function emojiGenerate(player_x, player_y, dragon_x, dragon_y) {
     var result_arr = [];
-    var variants = ["shield", "bomb", "warrior"];
     var i = 5;
     while (i > 0) {
       let variant = variants[randomNumber(0, 3)];
@@ -48,13 +47,16 @@ function randomNumber(min, max) {
     return result_arr;
   }
   
-  function randomGameGenerate() {
-    var shields = randomNumber(1, 6);
-    var bombs = randomNumber(0, 5 - shields);
-    var warriors = 5 - shields - bombs;
-  
-    console.log("s:" + shields + ";b:" + bombs + ";w:" + warriors);
-    return { shields, bombs, warriors };
+  function randomPositionsGenerate() {
+    let generating = true
+    while(generating){
+    var player_x = randomNumber(1, 6);
+    var player_y = randomNumber(1, 6);
+    var dragon_x = randomNumber(1, 6);
+    var dragon_y = randomNumber(1, 6);
+    if(string(player_x) + string(player_y) != string(dragon_x) + string(dragon_y)) generating = false
+    }
+    return {player_x, player_y, dragon_x, dragon_y};
   }
 
 class tacticalFight{

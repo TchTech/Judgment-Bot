@@ -84,12 +84,12 @@ TODO:   BOTTER.PY;
         ========
         +FALLS REFORMATION;
         ==========
-        FASTER RATING;
+        +FASTER RATING;
         ONLY ONE DB CONNECT;
         CHANNEL ADDING LINKE USRS; +
         
 
-        LOGS;
+        -LOGS;
         
 
         TRY-CATCH; +
@@ -374,6 +374,10 @@ client.on("message", (message) => {
           message.channel.send("ERROR: something went wrong in census process.")
         }
         break;
+      case "b!sell":
+        let price = message.content.split(" ")[1]
+        let item_name = message.       
+      break
       case commands.ru_help:
         message.channel.startTyping()
         const helpEmbed = new Discord.MessageEmbed()
@@ -1424,6 +1428,10 @@ function seasonChecker(){
   var date = moment()
   if(date.date() == 30 && date.hour() == 12 && is_sent == false && date.minute() >= 25 && date.minute() <= 50){
     updateGuilds()
+    is_sent = true
   }
   setTimeout(seasonChecker, 65000)
+  setTimeout(()=>{
+    is_sent = false
+  },3600000)
 }

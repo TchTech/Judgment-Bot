@@ -1,6 +1,6 @@
 <<<<<<< HEAD
-data
-node_modules
+data/
+node_modules/
 data/config.json
 =======
 data/config.json

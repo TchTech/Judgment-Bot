@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const client = new Discord.Client({
 //  ws: { intents: "GUILD_MEMBERS" },
 });
-const token = require("./data/config.json").king_token
+const token = process.env.KING_TOKEN
 
 client.on("ready", ()=>{
     client.user.setActivity("Пропишите b!games")

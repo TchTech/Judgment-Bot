@@ -2,16 +2,16 @@ const Discord = require("discord.js");
 const client = new Discord.Client({
 // ws: { intents: "GUILD_MEMBERS" },
 });
-const configfile = require("./data/config.json");
+//const configfile = require("./data/config.json");
 //const prefix = configfile.prefix;
-const token = configfile.token;
+const token = process.env.BOT_TOKEN//configfile.token;
 const commands = require("./commands.json");
 const help_messages = require("./helps.json");
 const conflicts = {};
 var is_allowed_to_census = true;
 var mongoose = require("mongoose");
 var user_model = require("./user_model");
-const mongo_uri = configfile.mongo_uri
+const mongo_uri = process.env.MONGODB_URI//configfile.mongo_uri
 var conflict_model = require("./conflict_model");
 const moment = require("moment");
 const channel_model = require("./channel_model");

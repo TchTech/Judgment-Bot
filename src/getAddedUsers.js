@@ -1,5 +1,5 @@
 const mongoose = require("mongoose")
-const mongo_uri = require("../data/config.json").mongo_uri
+const mongo_uri = process.env.MONGODB_URI
 var user_model = require("../user_model");
 
 async function getAddedUsers(

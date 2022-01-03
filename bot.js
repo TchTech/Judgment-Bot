@@ -718,12 +718,13 @@ async function userRegistration(message) {
           message.reply(
             "You was included to database successfully! Now you have ability for conflicts! Hooray!🎆\n*Вы были успешно добавлены в базу данных! Отныне у вас есть возможность конфликтовать! Урра!🎆*"
           );
-        } else {
-          message.reply(
-            "Oops... You was already included to database. You've already got conflict ability.\n*Упс... Вы уже были добавлены в базу данных. Вы уже получили возможность конфликтовать.*"
-          );
-        }
-      });
+        } 
+      //   else {
+      //     message.reply(
+      //       "Oops... You was already included to database. You've already got conflict ability.\n*Упс... Вы уже были добавлены в базу данных. Вы уже получили возможность конфликтовать.*"
+      //     );
+      //   }
+      // });
     });
   });
 }

@@ -724,7 +724,7 @@ async function userRegistration(message) {
       //       "Oops... You was already included to database. You've already got conflict ability.\n*Упс... Вы уже были добавлены в базу данных. Вы уже получили возможность конфликтовать.*"
       //     );
       //   }
-      // });
+      });
     });
   });
 }

@@ -119,8 +119,8 @@ client.on("ready", () => {
 
     }
   );
-  getAddedUsers().then((users)=>{added_users_ids = users;});
-  getAddedChannels().then((channels)=>{added_channels_ids = channels})
+  // getAddedUsers().then((users)=>{added_users_ids = users;});
+  // getAddedChannels().then((channels)=>{added_channels_ids = channels})
 });
 
 client.on("guildMemberAdd", (member) => {

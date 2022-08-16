@@ -973,7 +973,7 @@ async function antiSpamDefender(message){
   let hasPings = extendsPings(message)
   let hasLetterRepeat = letterRepeatDetector(message.content)
   console.log(message.content.length)
-  message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasPings
+  message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasPings + hasWordsRepeat
   console.log("amount:" + message_amount[memberPath])
   if(clearMsg !==undefined) clearTimeout(clearMsg)
   clearMsg = setTimeout(clearMessageAmount, 1300 + (hasPreviousRepeat * 400) + (isGreaterThanLimit * 200) + (hasPings * 370), message)

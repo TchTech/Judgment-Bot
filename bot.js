@@ -160,10 +160,10 @@ client.on("message", (message) => {
           message.channel.send("ERROR: couldn't make check or save of " + message.author.username + " in DB...")
           console.log(err)
         });
-        giveScores(message).catch((err)=>{
-          message.channel.send("ERROR: unable give score to " + message.author.username)
-          console.log(err)
-        });
+        // giveScores(message).catch((err)=>{
+        //   message.channel.send("ERROR: unable give score to " + message.author.username)
+        //   console.log(err)
+        // });
         antiSpamDefender(message)
     } else if(message.author.id !== '799723410572836874'){
       message.react("🚫")
@@ -973,7 +973,7 @@ async function antiSpamDefender(message){
   let hasPings = extendsPings(message)
   let hasLetterRepeat = letterRepeatDetector(message.content)
   console.log(message.content.length)
-  message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasWordsRepeat + isGreaterThanLimit + hasPings + hasLetterRepeat
+  message_amount[memberPath] = (message_amount[memberPath] || 0) + 1 + hasPreviousRepeat + hasPings
   console.log("amount:" + message_amount[memberPath])
   if(clearMsg !==undefined) clearTimeout(clearMsg)
   clearMsg = setTimeout(clearMessageAmount, 1300 + (hasPreviousRepeat * 400) + (isGreaterThanLimit * 200) + (hasPings * 370), message)

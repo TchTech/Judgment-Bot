@@ -169,36 +169,36 @@ client.on("message", (message) => {
       message.react("🚫")
     }
     switch (message.content.split(" ")[0]) {
-      case commands.score:
-        checkScore(message).catch((err)=>{
-          message.channel.send("ERROR: unable to check score of " + message.author.username)
-          console.log(err)
-        })
-        break;
-      case commands.rating:
-        mongoose.set("useFindAndModify", true);
-        mongoose.set("useNewUrlParser", true);
-        mongoose.set("useUnifiedTopology", true);
-        mongoose.connect(mongo_uri, (err) => {
-          if (err) throw err;
-          mongoose.connection.db.collection("channels", (err) => {
-            if (err) throw err;
-            channel_model.findOne(
-              { ds_id: message.guild.id },
-              (err, channel) => {
-                console.log(err, channel);
-                if (err) throw err;
-              try{
-                asyncRating(channel, message);
-              } catch(err){
-                message.channel.send("ERROR: unable to send rating.")
-                console.log(err)
-              }
-              }
-            );
-          });
-        });
-        break;
+      // case commands.score:
+      //   checkScore(message).catch((err)=>{
+      //     message.channel.send("ERROR: unable to check score of " + message.author.username)
+      //     console.log(err)
+      //   })
+      //   break;
+      // case commands.rating:
+      //   mongoose.set("useFindAndModify", true);
+      //   mongoose.set("useNewUrlParser", true);
+      //   mongoose.set("useUnifiedTopology", true);
+      //   mongoose.connect(mongo_uri, (err) => {
+      //     if (err) throw err;
+      //     mongoose.connection.db.collection("channels", (err) => {
+      //       if (err) throw err;
+      //       channel_model.findOne(
+      //         { ds_id: message.guild.id },
+      //         (err, channel) => {
+      //           console.log(err, channel);
+      //           if (err) throw err;
+      //         try{
+      //           asyncRating(channel, message);
+      //         } catch(err){
+      //           message.channel.send("ERROR: unable to send rating.")
+      //           console.log(err)
+      //         }
+      //         }
+      //       );
+      //     });
+      //   });
+      //   break;
       // case commands.uregistration:
       //   message.channel.startTyping()
       //   userRegistration(message).then(()=>{
@@ -374,10 +374,10 @@ client.on("message", (message) => {
           message.channel.send("ERROR: something went wrong in census process.")
         }
         break;
-      case "b!sell":
-        let price = message.content.split(" ")[1]
-        let item_name = message.       
-      break
+      // case "b!sell":
+      //   let price = message.content.split(" ")[1]
+      //   let item_name = message.       
+      // break
       case commands.ru_help:
         message.channel.startTyping()
         const helpEmbed = new Discord.MessageEmbed()
@@ -1427,7 +1427,7 @@ seasonChecker()
 
 function seasonChecker(){
   var date = moment()
-  if(date.date() == 30 && date.hour() == 12 && is_sent == false && date.minute() >= 25 && date.minute() <= 50){
+  if(date.date() == 30 && date.hour() == 12 && is_sent == false && date.minute() == 30){
     updateGuilds()
     is_sent = true
   }
